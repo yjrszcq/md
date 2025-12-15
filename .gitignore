@@ -1,2 +1,5 @@
 .idea
 .vscode
+.claude
+/md-data
+/md-logs
