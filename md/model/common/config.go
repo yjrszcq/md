@@ -14,4 +14,5 @@ var (
 	PostgresUser     string // postgres用户
 	PostgresPassword string // postgres密码
 	PostgresDB       string // postgres数据库名
+	AIEncryptKey     string // AI API Key加密密钥
 )

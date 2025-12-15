@@ -67,6 +67,14 @@ func InitRouter(app *iris.Application) {
 				rsa.Post("/sign", RSASign)
 				rsa.Post("/verify", RSAVerify)
 			})
+
+			data.PartyFunc("/ai", func(ai iris.Party) {
+				ai.Get("/config", AIConfigGet)
+				ai.Post("/config", AIConfigSave)
+				ai.Post("/config/delete", AIConfigDelete)
+				ai.Get("/config/exists", AIConfigExists)
+				ai.Get("/config/full", AIConfigGetFull)
+			})
 		})
 	})
 }

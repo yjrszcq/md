@@ -6,10 +6,19 @@ import SvgIcon from "@/components/svg-icon";
 
 export default defineComponent({
   name: "MdEditor",
-  emits: ["export"],
-  setup(_, { emit }) {
+  props: {
+    showAiButton: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  emits: ["export", "aiToggle"],
+  setup(props, { emit }) {
     const exportClick = () => {
       emit("export");
+    };
+    const aiClick = () => {
+      emit("aiToggle");
     };
     return () => {
       return (
@@ -45,6 +54,7 @@ export default defineComponent({
             "preview",
             "htmlPreview",
             "catalog",
+            ...(props.showAiButton ? [1] : []),
           ]}
           previewTheme="cyanosis"
           codeTheme="github"
@@ -62,6 +72,17 @@ export default defineComponent({
                   </div>
                 }
               ></NormalToolbar>
+              {props.showAiButton && (
+                <NormalToolbar
+                  title="AI 助手"
+                  onClick={aiClick}
+                  trigger={
+                    <div class="md-editor-icon">
+                      <SvgIcon className="icon-ai" name="ai"></SvgIcon>
+                    </div>
+                  }
+                ></NormalToolbar>
+              )}
             </>
           }
         />

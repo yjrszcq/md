@@ -28,6 +28,7 @@ func init() {
 	flag.StringVar(&common.PostgresUser, "pg_user", "", "postgres用户")
 	flag.StringVar(&common.PostgresPassword, "pg_password", "", "postgres密码")
 	flag.StringVar(&common.PostgresDB, "pg_db", "", "postgres数据库名")
+	flag.StringVar(&common.AIEncryptKey, "ai_key", "md-ai-encrypt-key-2024", "AI API Key加密密钥")
 	flag.Parse()
 
 	// 固定配置

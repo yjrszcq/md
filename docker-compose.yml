@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  md:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: md-server
+    restart: unless-stopped
+    ports:
+      - "9900:9900"
+    environment:
+      # 是否开放注册，true 为开放，false 为关闭
+      - reg=true
+      # AI API Key 加密密钥（建议生产环境修改为随机字符串）
+      - ai_key=md-ai-encrypt-key-2024
+      # PostgreSQL 配置（可选，不配置则使用 SQLite）
+      # - pg_host=postgres
+      # - pg_port=5432
+      # - pg_user=md
+      # - pg_password=md_password
+      # - pg_db=md
+    volumes:
+      # 数据持久化
+      - ./md-data:/md/data
+      - ./md-logs:/md/logs
+
+volumes:
+  md-data:
+  md-logs:

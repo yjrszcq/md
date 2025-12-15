@@ -21,6 +21,7 @@
         <template #dropdown>
           <el-dropdown-menu>
             <el-dropdown-item style="user-select: none" @click="publishClick">公开文档</el-dropdown-item>
+            <el-dropdown-item style="user-select: none" @click="aiConfigVisible = true">AI 配置</el-dropdown-item>
             <el-dropdown-item style="user-select: none" @click="dialogVisible = true">修改密码</el-dropdown-item>
             <el-dropdown-item style="user-select: none" @click="logout">退出登录</el-dropdown-item>
           </el-dropdown-menu>
@@ -41,6 +42,7 @@
         </span>
       </template>
     </el-dialog>
+    <ai-config-dialog v-model="aiConfigVisible" @configChanged="onAiConfigChanged" />
   </div>
 </template>
 
@@ -48,6 +50,7 @@
 import { ref, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import SvgIcon from "@/components/svg-icon";
+import AiConfigDialog from "@/components/ai-config-dialog/index.vue";
 import Token from "@/store/token";
 import TokenApi from "@/api/token";
 import UserApi from "@/api/user";
@@ -58,6 +61,7 @@ const hostUrl = ref(location.origin);
 const name = ref(Token.getName());
 const dialogVisible = ref(false);
 const dialogLoading = ref(false);
+const aiConfigVisible = ref(false);
 const form = ref({ password: "", newPassword: "", confirmPassword: "" });
 const onlyPreview = ref(true);
 const isStretch = ref(true);
@@ -153,6 +157,14 @@ const iconClick = () => {
 const publishClick = () => {
   let url = hostUrl.value + "/#/open/publish";
   window.open(url, "_blank");
+};
+
+/**
+ * AI 配置变化
+ */
+const onAiConfigChanged = (config: AIConfig) => {
+  // 通过自定义事件通知其他组件
+  window.dispatchEvent(new CustomEvent("ai-config-changed", { detail: config }));
 };
 </script>
 

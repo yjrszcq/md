@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  md:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: md-server
+    restart: unless-stopped
+    ports:
+      - "9900:9900"
+    environment:
+      - reg=true
+      - ai_key=md-ai-encrypt-key-2024
+      - pg_host=postgres
+      - pg_port=5432
+      - pg_user=md
+      - pg_password=md_password
+      - pg_db=md
+    volumes:
+      - ./md-data:/md/data
+      - ./md-logs:/md/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: md-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=md
+      - POSTGRES_PASSWORD=md_password
+      - POSTGRES_DB=md
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U md -d md"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  md-data:
+  md-logs:
+  postgres-data:
