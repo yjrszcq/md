@@ -5,16 +5,15 @@
       <el-tab-pane label="基础配置" name="basic">
         <el-form label-width="100px" label-position="left">
           <el-form-item label="Base URL">
-            <el-input v-model="form.baseUrl" placeholder="https://api.openai.com" clearable />
+            <el-input v-model="form.baseUrl" placeholder="https://api.openai.com" clearable autocomplete="off" />
           </el-form-item>
           <el-form-item label="API Key">
             <el-input
               v-model="form.apiKey"
-              :type="showApiKey ? 'text' : 'password'"
+              :class="{ 'hide-text': !showApiKey }"
               placeholder="sk-..."
               clearable
-              autocomplete="new-password"
-              name="ai-api-key"
+              autocomplete="off"
             >
               <template #suffix>
                 <el-icon class="cursor-pointer" @click="showApiKey = !showApiKey">
@@ -598,5 +597,11 @@ const handleClose = () => {
 
 .cursor-pointer {
   cursor: pointer;
+}
+
+.hide-text {
+  :deep(input) {
+    -webkit-text-security: disc;
+  }
 }
 </style>
