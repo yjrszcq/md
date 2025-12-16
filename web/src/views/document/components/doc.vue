@@ -4,8 +4,8 @@
     <el-popover v-if="!onlyPreview" :visible="addDocVisible" placement="bottom" trigger="click" width="240px">
       <el-input v-model="newDocName" placeholder="请输入文档名称" style="margin-right: 10px"></el-input>
       <el-radio-group v-model="newDocType" style="margin-top: 8px">
-        <el-radio-button label="md">Markdown</el-radio-button>
-        <el-radio-button label="openApi">OpenAPI</el-radio-button>
+        <el-radio-button value="md">Markdown</el-radio-button>
+        <el-radio-button value="openApi">OpenAPI</el-radio-button>
       </el-radio-group>
       <div style="display: flex; margin-top: 8px; justify-content: flex-end">
         <el-button @click="addDocCancel" size="small">取消</el-button>
@@ -51,8 +51,8 @@
         </el-form-item>
         <el-form-item label="文档类型">
           <el-radio-group v-model="dialog.condition.type" :disabled="!dialog.isAdd">
-            <el-radio-button label="md">Markdown</el-radio-button>
-            <el-radio-button label="openApi">OpenAPI</el-radio-button>
+            <el-radio-button value="md">Markdown</el-radio-button>
+            <el-radio-button value="openApi">OpenAPI</el-radio-button>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="公开发布">

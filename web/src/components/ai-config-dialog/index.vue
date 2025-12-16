@@ -55,7 +55,7 @@
         </div>
         <div class="prompts-list">
           <div v-for="(prompt, index) in form.systemPrompts" :key="prompt.id" class="prompt-item" :class="{ active: form.currentPromptId === prompt.id }">
-            <el-radio v-model="form.currentPromptId" :label="prompt.id" @change="handlePromptSelect">
+            <el-radio v-model="form.currentPromptId" :value="prompt.id" @change="handlePromptSelect">
               <span class="prompt-name">{{ prompt.name || "未命名提示词" }}</span>
             </el-radio>
             <div class="prompt-actions">
