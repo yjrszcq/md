@@ -31,7 +31,7 @@
     <!-- 对话选择栏 -->
     <div class="conversation-bar">
       <!-- 搜索按钮/搜索栏 -->
-      <div class="search-area">
+      <div class="search-area" ref="searchAreaRef">
         <template v-if="!searchExpanded">
           <el-button text size="small" @click="expandSearch" title="搜索对话">
             <el-icon><Search /></el-icon>
@@ -245,6 +245,7 @@ const currentConversationId = ref<string>("");
 const searchExpanded = ref(false);
 const searchKeyword = ref("");
 const searchInputRef = ref<HTMLInputElement | null>(null);
+const searchAreaRef = ref<HTMLElement | null>(null);
 const conversationSelectRef = ref<InstanceType<typeof import("element-plus").ElSelect> | null>(null);
 const isFirstAiResponse = ref(false);
 const searchDebounceTimer = ref<ReturnType<typeof setTimeout> | null>(null);
@@ -390,15 +391,26 @@ const handleSearchClear = () => {
 
 // 处理下拉列表显示/隐藏
 const handleSelectVisibleChange = (visible: boolean) => {
-  // 如果在搜索模式下，下拉列表被关闭（非选择导致），重新打开
+  // 如果在搜索模式下，下拉列表被关闭
   if (!visible && searchExpanded.value) {
-    nextTick(() => {
-      (conversationSelectRef.value as any)?.toggleMenu?.();
-      // 保持搜索框焦点
-      setTimeout(() => {
-        searchInputRef.value?.focus();
-      }, 50);
-    });
+    // 检查当前焦点是否在搜索区域内，如果是则不取消搜索
+    const activeElement = document.activeElement;
+    if (searchAreaRef.value?.contains(activeElement)) {
+      // 点击在搜索区域内，重新打开下拉列表
+      nextTick(() => {
+        (conversationSelectRef.value as any)?.toggleMenu?.();
+      });
+      return;
+    }
+
+    // 点击在其他地方，等待下拉列表动画结束后再收起搜索框
+    setTimeout(() => {
+      searchExpanded.value = false;
+      searchKeyword.value = "";
+      // 恢复到搜索前的对话
+      currentConversationId.value = savedConversationId.value;
+      loadConversations();
+    }, 200); // Element Plus 下拉动画约 200ms
   }
 };
 
@@ -691,7 +703,8 @@ const sendMessage = async () => {
   inputText.value = "";
 
   const isAgentMode = mode.value === "agent" && config.value.docContextEnabled;
-  const needGenerateTitle = !currentConversationId.value && tasks.value.length === 0;
+  // 判断是否需要在 AI 回复后生成标题：新对话且是第一条消息
+  const isNewConversation = !currentConversationId.value;
 
   const task: TaskBlock = {
     id: Date.now().toString(),
@@ -807,8 +820,8 @@ const sendMessage = async () => {
     abortController.value = null;
     await saveConversation();
 
-    // 如果是新对话的第一次AI回复，生成标题
-    if (needGenerateTitle && task.status === "completed" && currentConversationId.value) {
+    // 如果是新对话的第一次AI回复成功，生成标题
+    if (isNewConversation && task.status === "completed" && currentConversationId.value) {
       const title = await generateTitle(userInput, task.output);
       try {
         await AIApi.updateConversationTitle(currentConversationId.value, title);
@@ -1307,13 +1320,24 @@ const stopResize = () => {
 
 .error-state {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   padding: 10px;
   border-radius: 4px;
   font-size: 13px;
   background: #fff2f0;
   color: #ff4d4f;
+
+  .el-icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  span {
+    word-break: break-word;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
 }
 
 .input-area {
