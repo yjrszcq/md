@@ -53,6 +53,7 @@ import TokenApi from "@/api/token";
 import { ElMessage } from "element-plus";
 import { useRouter } from "vue-router";
 import TextRain from "@/components/text-rain/index.vue";
+import AIConfigStore from "@/store/ai-config";
 
 const hostUrl = ref(location.origin);
 const router = useRouter();
@@ -99,7 +100,9 @@ const loginClick = () => {
     // 登录
     loading.value = true;
     TokenApi.signIn(inputData.value.name, inputData.value.password)
-      .then((res) => {
+      .then(async (res) => {
+        // 登录时清除AI缓存，避免残留其他用户的数据
+        await AIConfigStore.clearAll();
         Token.setToken(res.data);
         router.push({ name: "layout" });
       })

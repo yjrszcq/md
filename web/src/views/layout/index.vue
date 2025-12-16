@@ -56,6 +56,7 @@ import TokenApi from "@/api/token";
 import UserApi from "@/api/user";
 import router from "@/router";
 import DocCache from "@/store/doc-cache";
+import AIConfigStore from "@/store/ai-config";
 
 const hostUrl = ref(location.origin);
 const name = ref(Token.getName());
@@ -87,8 +88,9 @@ const logout = () => {
     cancelButtonText: "取消",
     type: "info",
   })
-    .then(() => {
+    .then(async () => {
       DocCache.removeDoc();
+      await AIConfigStore.clearAll();
       TokenApi.signOut();
       Token.removeToken();
     })

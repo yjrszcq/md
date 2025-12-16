@@ -189,6 +189,23 @@ class AIConfigStore {
       throw new Error("无效的配置文件格式");
     }
   }
+
+  /**
+   * 清除所有AI相关缓存（用于登出/登录时）
+   */
+  async clearAll(): Promise<void> {
+    // 清除 localforage 中的所有数据
+    await store.clear();
+    // 清除 localStorage 中的AI相关数据
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (key.startsWith("AISaveToServer_") || key === "AISidebarWidth")) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach((key) => localStorage.removeItem(key));
+  }
 }
 
 export default new AIConfigStore();
