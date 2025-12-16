@@ -16,7 +16,7 @@ func AIConversationAdd(tx *sqlx.Tx, conversation entity.AIConversation) error {
 
 // 更新对话
 func AIConversationUpdate(tx *sqlx.Tx, conversation entity.AIConversation) error {
-	sql := `update t_ai_conversation set title=:title,content=:content,update_time=:update_time where id=:id and user_id=:user_id`
+	sql := `update t_ai_conversation set content=:content,update_time=:update_time where id=:id and user_id=:user_id`
 	_, err := tx.NamedExec(sql, conversation)
 	return err
 }
