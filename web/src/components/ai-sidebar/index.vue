@@ -84,7 +84,7 @@
     </div>
 
     <!-- 任务块区域 -->
-    <div class="task-blocks" ref="taskBlocksRef">
+    <div class="task-blocks" ref="taskBlocksRef" @scroll="handleTaskBlocksScroll">
       <div v-for="(task, taskIndex) in tasks" :key="task.id" class="task-block">
         <!-- 用户任务 -->
         <div class="user-task">
@@ -215,7 +215,12 @@
         :disabled="sending"
       />
       <div class="input-actions">
-        <span class="input-tip">Enter 发送，Shift+Enter 换行</span>
+        <div class="input-left">
+          <span class="input-tip">Enter 发送，Shift+Enter 换行</span>
+          <el-checkbox v-model="autoScrollUserEnabled" size="small" class="auto-scroll-checkbox">
+            自动滚动
+          </el-checkbox>
+        </div>
         <el-button
           v-if="sending"
           type="danger"
@@ -254,7 +259,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "close"): void;
-  (e: "applyChange", change: AgentChange, callback: (success: boolean, undoData?: { originalContent: string; appliedContent: string }) => void): void;
+  (e: "applyChange", change: AgentChange, callback: (success: boolean, undoData?: { originalContent: string; appliedContent: string; undoStart: number; undoEnd: number }) => void): void;
   (e: "undoChange", change: AgentChange, callback: (success: boolean) => void): void;
 }>();
 
@@ -267,6 +272,11 @@ const taskBlocksRef = ref<HTMLElement | null>(null);
 const expandedReasonings = ref<Set<string>>(new Set());
 const expandedRawOutputs = ref<Set<string>>(new Set());
 const abortController = ref<AbortController | null>(null);
+
+// Auto-scroll state
+const autoScrollEnabled = ref(true);
+const autoScrollUserEnabled = ref(true);
+const lastScrollTop = ref(0);
 
 // 对话记录相关
 const conversations = ref<AIConversationListItem[]>([]);
@@ -763,7 +773,9 @@ const sendMessage = async () => {
 
   tasks.value.push(task);
   await nextTick();
-  scrollToBottom(true); // Force scroll when user sends message
+  // Reset auto-scroll when AI starts generating
+  autoScrollEnabled.value = true;
+  scrollToBottom(true);
 
   sending.value = true;
   abortController.value = new AbortController();
@@ -884,14 +896,35 @@ const sendMessage = async () => {
 const isNearBottom = () => {
   if (!taskBlocksRef.value) return true;
   const { scrollTop, scrollHeight, clientHeight } = taskBlocksRef.value;
-  return scrollHeight - scrollTop - clientHeight < 100;
+  return scrollHeight - scrollTop - clientHeight < 300;
 };
 
-// Scroll to bottom only if user is already near bottom
+// Handle scroll event to detect user scroll direction
+const handleTaskBlocksScroll = () => {
+  // Only track scroll state while AI is generating
+  if (!sending.value || !taskBlocksRef.value) return;
+
+  const { scrollTop } = taskBlocksRef.value;
+
+  // User scrolled up - disable auto scroll
+  if (scrollTop < lastScrollTop.value - 10) {
+    autoScrollEnabled.value = false;
+  }
+
+  // User scrolled to near bottom - re-enable auto scroll
+  if (isNearBottom()) {
+    autoScrollEnabled.value = true;
+  }
+
+  lastScrollTop.value = scrollTop;
+};
+
+// Scroll to bottom only if auto-scroll is enabled and AI is generating
 const scrollToBottom = (force = false) => {
   nextTick(() => {
-    if (taskBlocksRef.value && (force || isNearBottom())) {
+    if (taskBlocksRef.value && (force || (autoScrollUserEnabled.value && autoScrollEnabled.value && sending.value))) {
       taskBlocksRef.value.scrollTop = taskBlocksRef.value.scrollHeight;
+      lastScrollTop.value = taskBlocksRef.value.scrollTop;
     }
   });
 };
@@ -1443,9 +1476,22 @@ const stopResize = () => {
     align-items: center;
     margin-top: 10px;
 
+    .input-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
     .input-tip {
       font-size: 12px;
       color: #909399;
+    }
+
+    .auto-scroll-checkbox {
+      :deep(.el-checkbox__label) {
+        font-size: 12px;
+        color: #909399;
+      }
     }
   }
 }

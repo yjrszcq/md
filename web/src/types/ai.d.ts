@@ -95,6 +95,8 @@ interface AgentChange {
   undoData?: {
     originalContent: string;
     appliedContent: string;
+    undoStart: number;
+    undoEnd: number;
   };
 }
 

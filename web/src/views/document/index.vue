@@ -40,6 +40,7 @@
         <md-preview v-if="onlyPreview" :key="'preview' + mdKey" class="editor-view" :content="currentDoc.content" />
         <md-editor
           v-else
+          ref="mdEditorRef"
           :key="'editor' + mdKey"
           class="editor-view"
           v-model="currentDoc.content"
@@ -95,6 +96,7 @@ defineProps({
 
 const docRef = ref<InstanceType<typeof Doc>>();
 const codemirrorRef = ref();
+const mdEditorRef = ref();
 const hostUrl = ref("");
 const books: Ref<Book[]> = ref([]);
 const currentBookId = ref("");
@@ -250,14 +252,106 @@ const toggleAiSidebar = () => {
 };
 
 /**
+ * Scroll editor to position and highlight lines
+ */
+let highlightStyleEl: HTMLStyleElement | null = null;
+
+const scrollToAndSelect = (startIndex: number, endIndex: number) => {
+  // Wait for editor to re-render after mdKey change
+  setTimeout(() => {
+    nextTick(() => {
+      const content = currentDoc.value.content;
+      const beforeText = content.slice(0, startIndex);
+      const startLine = beforeText.split('\n').length;
+
+      // Find CodeMirror content element
+      const editorEl = document.querySelector('.editor-view .cm-content') as HTMLElement;
+      if (!editorEl) return;
+
+      // Find target line element
+      const lines = editorEl.querySelectorAll('.cm-line');
+      const targetLine = lines[startLine - 1] as HTMLElement;
+
+      // Remove previous highlight style if exists
+      if (highlightStyleEl) {
+        highlightStyleEl.remove();
+        highlightStyleEl = null;
+      }
+
+      // Apply highlight style first (survives image re-renders)
+      const style = document.createElement('style');
+      if (startIndex === endIndex) {
+        // Point indicator for insert undo / delete apply
+        style.textContent = `
+          .editor-view .cm-content .cm-line:nth-child(${startLine})::after {
+            content: '';
+            display: block;
+            height: 3px;
+            background: linear-gradient(90deg, #f0ad4e, #ec971f);
+            margin-top: 2px;
+            border-radius: 2px;
+          }
+        `;
+      } else {
+        // Normal range highlight
+        const changeText = content.slice(startIndex, endIndex);
+        const lineCount = changeText.split('\n').length;
+        const endLine = startLine + lineCount - 1;
+
+        const selectors: string[] = [];
+        for (let i = startLine; i <= endLine; i++) {
+          selectors.push(`.editor-view .cm-content .cm-line:nth-child(${i})`);
+        }
+        style.textContent = `
+          ${selectors.join(',\n')} {
+            background-color: #fff3cd !important;
+          }
+        `;
+      }
+      document.head.appendChild(style);
+      highlightStyleEl = style;
+
+      // Scroll function
+      const doScroll = () => {
+        const freshLines = editorEl.querySelectorAll('.cm-line');
+        const freshTarget = freshLines[startLine - 1] as HTMLElement;
+        if (freshTarget) {
+          freshTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      };
+
+      // First scroll attempt
+      if (targetLine) {
+        targetLine.scrollIntoView({ behavior: 'auto', block: 'center' });
+      }
+
+      // Second scroll after images likely loaded
+      setTimeout(doScroll, 400);
+
+      // Remove highlight after delay
+      setTimeout(() => {
+        if (highlightStyleEl) {
+          highlightStyleEl.remove();
+          highlightStyleEl = null;
+        }
+      }, 2500);
+    });
+  }, 150);
+};
+
+/**
  * 处理 AI 变更建议
  */
 const handleAiChange = (
   change: AgentChange,
-  callback: (success: boolean, undoData?: { originalContent: string; appliedContent: string }) => void
+  callback: (success: boolean, undoData?: { originalContent: string; appliedContent: string; undoStart: number; undoEnd: number }) => void
 ) => {
   const originalContent = currentDoc.value.content;
   let success = false;
+  let changeStart = -1;
+  let changeEnd = -1;
+  let undoStart = -1;
+  let undoEnd = -1;
 
   switch (change.type) {
     case "replace":
@@ -269,6 +363,11 @@ const handleAiChange = (
           ElMessage.success("已替换指定内容");
           mdKey.value++;
           success = true;
+          changeStart = index;
+          changeEnd = index + change.content.length;
+          // Undo position: where oldText was
+          undoStart = index;
+          undoEnd = index + change.oldText.length;
         } else {
           ElMessage.warning("未找到要替换的内容，请手动修改");
         }
@@ -279,7 +378,7 @@ const handleAiChange = (
 
     case "insert":
       if (change.oldText) {
-        // 在指定文本后插入
+        // Insert after specified text
         const index = originalContent.indexOf(change.oldText);
         if (index !== -1) {
           const insertPos = index + change.oldText.length;
@@ -288,15 +387,26 @@ const handleAiChange = (
           ElMessage.success("已插入内容");
           mdKey.value++;
           success = true;
+          changeStart = insertPos;
+          changeEnd = insertPos + change.content.length;
+          // Undo: content removed, show line at insert position
+          undoStart = insertPos;
+          undoEnd = insertPos;
         } else {
           ElMessage.warning("未找到插入位置，请手动修改");
         }
       } else {
-        // 无定位信息时追加到末尾
+        // No anchor text, append to end
+        const insertPos = originalContent.length + 1;
         currentDoc.value.content = originalContent + "\n" + change.content;
         ElMessage.success("已追加内容到文档末尾");
         mdKey.value++;
         success = true;
+        changeStart = insertPos;
+        changeEnd = currentDoc.value.content.length;
+        // Undo: show line at original end position
+        undoStart = originalContent.length;
+        undoEnd = originalContent.length;
       }
       break;
 
@@ -309,6 +419,11 @@ const handleAiChange = (
           ElMessage.success("已删除指定内容");
           mdKey.value++;
           success = true;
+          changeStart = index;
+          changeEnd = index;
+          // Undo: oldText restored at index
+          undoStart = index;
+          undoEnd = index + change.oldText.length;
         } else {
           ElMessage.warning("未找到要删除的内容，请手动修改");
         }
@@ -321,6 +436,11 @@ const handleAiChange = (
           ElMessage.success("已删除指定内容");
           mdKey.value++;
           success = true;
+          changeStart = index;
+          changeEnd = index;
+          // Undo: content restored at index
+          undoStart = index;
+          undoEnd = index + change.content.length;
         } else {
           ElMessage.warning("未找到要删除的内容，请手动修改");
         }
@@ -338,7 +458,13 @@ const handleAiChange = (
     callback(true, {
       originalContent,
       appliedContent: currentDoc.value.content,
+      undoStart,
+      undoEnd,
     });
+    // Scroll to change and highlight
+    if (changeStart >= 0) {
+      scrollToAndSelect(changeStart, changeEnd);
+    }
   } else {
     callback(false);
   }
@@ -355,6 +481,10 @@ const handleAiUndo = (change: AgentChange, callback: (success: boolean) => void)
       ElMessage.success("已撤回修改");
       mdKey.value++;
       callback(true);
+      // Scroll to undo position and highlight
+      if (change.undoData.undoStart >= 0) {
+        scrollToAndSelect(change.undoData.undoStart, change.undoData.undoEnd);
+      }
     } else {
       ElMessage.warning("文档已被修改，无法撤回");
       callback(false);
