@@ -83,42 +83,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS "user_name"
 ON "t_user" (
   "name" ASC
 );
-
-CREATE TABLE IF NOT EXISTS t_ai_config
-(
-	id varchar(50) PRIMARY KEY NOT NULL,
-	user_id varchar(50) NOT NULL,
-	base_url text NOT NULL DEFAULT '',
-	api_key text NOT NULL DEFAULT '',
-	model text NOT NULL DEFAULT '',
-	system_prompts text NOT NULL DEFAULT '[]',
-	current_prompt_id varchar(50) NOT NULL DEFAULT '',
-	system_prompt_enabled boolean NOT NULL DEFAULT false,
-	doc_context_enabled boolean NOT NULL DEFAULT false,
-	panel_enabled boolean NOT NULL DEFAULT false,
-	create_time bigint NOT NULL,
-	update_time bigint NOT NULL
-);
-
-CREATE UNIQUE INDEX IF NOT EXISTS "ai_config_user_id"
-ON "t_ai_config" (
-  "user_id" ASC
-);
-
-CREATE TABLE IF NOT EXISTS t_ai_conversation
-(
-	id varchar(50) PRIMARY KEY NOT NULL,
-	user_id varchar(50) NOT NULL,
-	title text NOT NULL DEFAULT '新对话',
-	content text NOT NULL DEFAULT '[]',
-	create_time bigint NOT NULL,
-	update_time bigint NOT NULL
-);
-
-CREATE INDEX IF NOT EXISTS "ai_conversation_user_id"
-ON "t_ai_conversation" (
-  "user_id" ASC
-);
 `
 
 // 初始化数据库连接
@@ -133,8 +97,14 @@ func InitDB() error {
 		return err
 	}
 
-	// 创建表结构
+	// Create base tables
 	Db.MustExec(createTableSql)
+
+	// Run migrations for schema updates
+	if err = RunMigrations(); err != nil {
+		Log.Error("Database migration failed: ", err)
+		return err
+	}
 
 	return nil
 }
