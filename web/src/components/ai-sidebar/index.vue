@@ -233,6 +233,7 @@ const config = ref<AIConfig>({
   model: "",
   systemPrompts: [],
   currentPromptId: "",
+  systemPromptEnabled: false,
   docContextEnabled: false,
   panelEnabled: false,
 });

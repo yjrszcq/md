@@ -49,11 +49,15 @@
 
       <!-- 系统提示词 -->
       <el-tab-pane label="系统提示词" name="prompts">
+        <div class="prompts-enable">
+          <el-switch v-model="form.systemPromptEnabled" />
+          <span class="enable-label">启用系统提示词</span>
+        </div>
         <div class="prompts-header">
           <span class="tip">管理多个系统提示词，选择一个作为当前生效提示词</span>
           <el-button type="primary" size="small" @click="addPrompt">新增</el-button>
         </div>
-        <div class="prompts-list">
+        <div class="prompts-list" :class="{ disabled: !form.systemPromptEnabled }">
           <div v-for="(prompt, index) in form.systemPrompts" :key="prompt.id" class="prompt-item" :class="{ active: form.currentPromptId === prompt.id }">
             <el-radio v-model="form.currentPromptId" :value="prompt.id" @change="handlePromptSelect">
               <span class="prompt-name">{{ prompt.name || "未命名提示词" }}</span>
@@ -189,6 +193,7 @@ const form = ref<AIConfig>({
   model: "",
   systemPrompts: [],
   currentPromptId: "",
+  systemPromptEnabled: false,
   docContextEnabled: false,
   panelEnabled: false,
 });
@@ -531,6 +536,20 @@ const handleClose = () => {
   }
 }
 
+.prompts-enable {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #ebeef5;
+
+  .enable-label {
+    margin-left: 8px;
+    font-size: 14px;
+    color: #303133;
+  }
+}
+
 .prompts-header {
   display: flex;
   justify-content: space-between;
@@ -545,6 +564,11 @@ const handleClose = () => {
 .prompts-list {
   max-height: 300px;
   overflow-y: auto;
+
+  &.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
 }
 
 .prompt-item {

@@ -32,13 +32,14 @@ func AIConfigGet(userId string) entity.AIConfigCondition {
 	}
 
 	return entity.AIConfigCondition{
-		BaseUrl:           config.BaseUrl,
-		ApiKey:            maskApiKey(config.ApiKey),
-		Model:             config.Model,
-		SystemPrompts:     prompts,
-		CurrentPromptId:   config.CurrentPromptId,
-		DocContextEnabled: config.DocContextEnabled,
-		PanelEnabled:      config.PanelEnabled,
+		BaseUrl:             config.BaseUrl,
+		ApiKey:              maskApiKey(config.ApiKey),
+		Model:               config.Model,
+		SystemPrompts:       prompts,
+		CurrentPromptId:     config.CurrentPromptId,
+		SystemPromptEnabled: config.SystemPromptEnabled,
+		DocContextEnabled:   config.DocContextEnabled,
+		PanelEnabled:        config.PanelEnabled,
 	}
 }
 
@@ -73,15 +74,16 @@ func AIConfigSave(userId string, condition entity.AIConfigCondition) {
 	promptsJson, _ := json.Marshal(condition.SystemPrompts)
 
 	config := entity.AIConfig{
-		UserId:            userId,
-		BaseUrl:           strings.TrimSuffix(condition.BaseUrl, "/"),
-		ApiKey:            apiKey,
-		Model:             condition.Model,
-		SystemPrompts:     string(promptsJson),
-		CurrentPromptId:   condition.CurrentPromptId,
-		DocContextEnabled: condition.DocContextEnabled,
-		PanelEnabled:      condition.PanelEnabled,
-		UpdateTime:        time.Now().UnixMilli(),
+		UserId:              userId,
+		BaseUrl:             strings.TrimSuffix(condition.BaseUrl, "/"),
+		ApiKey:              apiKey,
+		Model:               condition.Model,
+		SystemPrompts:       string(promptsJson),
+		CurrentPromptId:     condition.CurrentPromptId,
+		SystemPromptEnabled: condition.SystemPromptEnabled,
+		DocContextEnabled:   condition.DocContextEnabled,
+		PanelEnabled:        condition.PanelEnabled,
+		UpdateTime:          time.Now().UnixMilli(),
 	}
 
 	var err error
@@ -154,13 +156,14 @@ func AIConfigGetFull(userId string) entity.AIConfigCondition {
 	}
 
 	return entity.AIConfigCondition{
-		BaseUrl:           config.BaseUrl,
-		ApiKey:            apiKey,
-		Model:             config.Model,
-		SystemPrompts:     prompts,
-		CurrentPromptId:   config.CurrentPromptId,
-		DocContextEnabled: config.DocContextEnabled,
-		PanelEnabled:      config.PanelEnabled,
+		BaseUrl:             config.BaseUrl,
+		ApiKey:              apiKey,
+		Model:               config.Model,
+		SystemPrompts:       prompts,
+		CurrentPromptId:     config.CurrentPromptId,
+		SystemPromptEnabled: config.SystemPromptEnabled,
+		DocContextEnabled:   config.DocContextEnabled,
+		PanelEnabled:        config.PanelEnabled,
 	}
 }
 

@@ -212,9 +212,11 @@ class AIApi {
 
     // 注入系统提示词（使用用户配置的提示词）
     let systemContent = "";
-    const activePrompt = config.systemPrompts.find((p) => p.id === config.currentPromptId);
-    if (activePrompt?.content) {
-      systemContent = activePrompt.content;
+    if (config.systemPromptEnabled) {
+      const activePrompt = config.systemPrompts.find((p) => p.id === config.currentPromptId);
+      if (activePrompt?.content) {
+        systemContent = activePrompt.content;
+      }
     }
 
     // 注入文档上下文
@@ -283,9 +285,11 @@ class AIApi {
 
     // 注入系统提示词（使用用户配置的提示词）
     let systemContent = "";
-    const activePrompt = config.systemPrompts.find((p) => p.id === config.currentPromptId);
-    if (activePrompt?.content) {
-      systemContent = activePrompt.content;
+    if (config.systemPromptEnabled) {
+      const activePrompt = config.systemPrompts.find((p) => p.id === config.currentPromptId);
+      if (activePrompt?.content) {
+        systemContent = activePrompt.content;
+      }
     }
 
     // 注入文档上下文

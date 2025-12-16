@@ -13,6 +13,7 @@ interface AIConfig {
   model: string;
   systemPrompts: SystemPrompt[];
   currentPromptId: string;
+  systemPromptEnabled: boolean;
   docContextEnabled: boolean;
   panelEnabled: boolean;
 }
