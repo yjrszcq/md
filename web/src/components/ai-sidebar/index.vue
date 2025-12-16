@@ -898,7 +898,7 @@ const sendMessage = async () => {
 const isNearBottom = () => {
   if (!taskBlocksRef.value) return true;
   const { scrollTop, scrollHeight, clientHeight } = taskBlocksRef.value;
-  return scrollHeight - scrollTop - clientHeight < 100;
+  return scrollHeight - scrollTop - clientHeight < 180;
 };
 
 // Handle scroll event to detect user scroll direction

@@ -266,7 +266,9 @@ const scrollToAndSelect = (startIndex: number, endIndex: number) => {
     const safeEnd = Math.min(endIndex, content.length);
 
     const beforeText = content.slice(0, safeStart);
-    const startLine = beforeText.split('\n').length;
+    const totalLines = content.split('\n').length;
+    // Clamp startLine to actual line count (handles EOF insert undo)
+    const startLine = Math.min(beforeText.split('\n').length, totalLines);
 
     // Remove previous highlight style if exists
     if (highlightStyleEl) {
@@ -312,7 +314,9 @@ const scrollToAndSelect = (startIndex: number, endIndex: number) => {
       const freshEditorEl = document.querySelector('.editor-view .cm-content') as HTMLElement;
       if (!freshEditorEl) return;
       const freshLines = freshEditorEl.querySelectorAll('.cm-line');
-      const freshTarget = freshLines[startLine - 1] as HTMLElement;
+      // If target line doesn't exist (e.g., insert at EOF undone), scroll to last line
+      const targetIndex = Math.min(startLine - 1, freshLines.length - 1);
+      const freshTarget = freshLines[targetIndex] as HTMLElement;
       if (freshTarget) {
         freshTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
@@ -472,15 +476,16 @@ const handleAiUndo = (change: AgentChange, callback: (success: boolean) => void)
     // Check if content matches applied content
     if (currentDoc.value.content === change.undoData.appliedContent) {
       currentDoc.value.content = change.undoData.originalContent;
+      // Save scroll position before callback clears undoData
+      const scrollStart = change.undoData.undoStart;
+      const scrollEnd = change.undoData.undoEnd;
       ElMessage.success("已撤回修改");
       mdKey.value++;
       callback(true);
-      // Wait for editor re-render, then scroll
-      nextTick(() => {
-        if (change.undoData!.undoStart >= 0) {
-          scrollToAndSelect(change.undoData!.undoStart, change.undoData!.undoEnd);
-        }
-      });
+      // Scroll to undo position
+      if (scrollStart >= 0) {
+        scrollToAndSelect(scrollStart, scrollEnd);
+      }
     } else {
       ElMessage.warning("文档已被修改，无法撤回");
       callback(false);
