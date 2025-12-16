@@ -15,10 +15,10 @@
         <span class="model-name" :title="config.model">{{ config.model || "未配置模型" }}</span>
         <span class="status-dot" :class="statusClass"></span>
         <div class="header-actions">
-          <el-button text size="small" @click="exportHistory" title="导出对话" :disabled="tasks.length === 0">
+          <el-button text size="small" @click="exportHistory" title="导出对话" :disabled="tasks.length === 0 || !currentConversationId">
             <el-icon><Download /></el-icon>
           </el-button>
-          <el-button text size="small" @click="clearHistory" title="清空会话">
+          <el-button text size="small" @click="deleteCurrentConversation" title="删除对话" :disabled="!currentConversationId">
             <el-icon><Delete /></el-icon>
           </el-button>
           <el-button text size="small" @click="emit('close')" title="关闭">
@@ -26,6 +26,59 @@
           </el-button>
         </div>
       </div>
+    </div>
+
+    <!-- 对话选择栏 -->
+    <div class="conversation-bar">
+      <!-- 搜索按钮/搜索栏 -->
+      <div class="search-area">
+        <template v-if="!searchExpanded">
+          <el-button text size="small" @click="expandSearch" title="搜索对话">
+            <el-icon><Search /></el-icon>
+          </el-button>
+        </template>
+        <template v-else>
+          <el-input
+            ref="searchInputRef"
+            v-model="searchKeyword"
+            size="small"
+            placeholder="搜索对话..."
+            clearable
+            @input="handleSearch"
+            @clear="handleSearchClear"
+            @keydown.esc="collapseSearch"
+          >
+            <template #prefix>
+              <el-icon><Search /></el-icon>
+            </template>
+          </el-input>
+          <el-button text size="small" @click="collapseSearch" title="取消搜索">
+            <el-icon><Close /></el-icon>
+          </el-button>
+        </template>
+      </div>
+      <!-- 对话选择下拉列表 -->
+      <el-select
+        v-model="currentConversationId"
+        size="small"
+        placeholder="选择对话"
+        class="conversation-select"
+        @change="handleConversationChange"
+        :disabled="sending"
+      >
+        <el-option label="+ 新建对话" value="" />
+        <el-option
+          v-for="conv in filteredConversations"
+          :key="conv.id"
+          :label="conv.title"
+          :value="conv.id"
+        >
+          <div class="conversation-option" :class="{ 'is-current': conv.id === currentConversationId }">
+            <span class="conv-title">{{ conv.title }}</span>
+            <span class="conv-time">{{ formatTime(conv.updateTime) }}</span>
+          </div>
+        </el-option>
+      </el-select>
     </div>
 
     <!-- 任务块区域 -->
@@ -156,8 +209,8 @@
 
 <script lang="ts" setup>
 import { ref, shallowRef, computed, watch, onMounted, onUnmounted, nextTick, triggerRef } from "vue";
-import { ElMessage } from "element-plus";
-import { Delete, Close, Warning, ArrowRight, VideoPause, Download } from "@element-plus/icons-vue";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { Delete, Close, Warning, ArrowRight, VideoPause, Download, Search } from "@element-plus/icons-vue";
 import { MdPreview } from "md-editor-v3";
 import "md-editor-v3/lib/preview.css";
 import AIApi from "@/api/ai";
@@ -184,6 +237,14 @@ const taskBlocksRef = ref<HTMLElement | null>(null);
 const expandedReasonings = ref<Set<string>>(new Set());
 const abortController = ref<AbortController | null>(null);
 
+// 对话记录相关
+const conversations = ref<AIConversationListItem[]>([]);
+const currentConversationId = ref<string>("");
+const searchExpanded = ref(false);
+const searchKeyword = ref("");
+const searchInputRef = ref<HTMLInputElement | null>(null);
+const isFirstAiResponse = ref(false);
+
 const config = ref<AIConfig>({
   baseUrl: "",
   apiKey: "",
@@ -195,14 +256,102 @@ const config = ref<AIConfig>({
   panelEnabled: false,
 });
 
+// 过滤后的对话列表
+const filteredConversations = computed(() => {
+  if (!searchKeyword.value) {
+    return conversations.value;
+  }
+  return conversations.value;
+});
+
+// 格式化时间
+const formatTime = (timestamp: number) => {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+
+  if (diff < 60000) return "刚刚";
+  if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`;
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`;
+  if (diff < 604800000) return `${Math.floor(diff / 86400000)}天前`;
+
+  return `${date.getMonth() + 1}/${date.getDate()}`;
+};
+
 // 加载配置
 const loadConfig = async () => {
   config.value = await AIConfigStore.getConfig();
   sidebarWidth.value = AIConfigStore.getSidebarWidth();
+};
 
-  // 加载聊天历史
-  const history = await AIConfigStore.getChatHistory();
-  tasks.value = history;
+// 加载对话列表
+const loadConversations = async () => {
+  try {
+    const res = await AIApi.getConversationList();
+    conversations.value = res.data;
+  } catch (err) {
+    console.error("加载对话列表失败", err);
+  }
+};
+
+// 加载对话详情
+const loadConversation = async (id: string) => {
+  if (!id) {
+    // 新建对话模式
+    tasks.value = [];
+    expandedReasonings.value.clear();
+    isFirstAiResponse.value = false;
+    return;
+  }
+
+  try {
+    const res = await AIApi.getConversation(id);
+    const content = JSON.parse(res.data.content || "[]") as TaskBlock[];
+    tasks.value = content;
+    expandedReasonings.value.clear();
+    isFirstAiResponse.value = content.length > 0;
+  } catch (err) {
+    console.error("加载对话详情失败", err);
+    ElMessage.error("加载对话失败");
+  }
+};
+
+// 处理对话切换
+const handleConversationChange = async (id: string) => {
+  await loadConversation(id);
+  scrollToBottom();
+};
+
+// 搜索相关
+const expandSearch = () => {
+  searchExpanded.value = true;
+  nextTick(() => {
+    searchInputRef.value?.focus();
+  });
+};
+
+const collapseSearch = () => {
+  searchExpanded.value = false;
+  searchKeyword.value = "";
+  loadConversations();
+};
+
+const handleSearch = async () => {
+  if (!searchKeyword.value) {
+    await loadConversations();
+    return;
+  }
+
+  try {
+    const res = await AIApi.searchConversations(searchKeyword.value);
+    conversations.value = res.data;
+  } catch (err) {
+    console.error("搜索失败", err);
+  }
+};
+
+const handleSearchClear = () => {
+  loadConversations();
 };
 
 // 监听 AI 配置变化事件
@@ -231,6 +380,7 @@ watch(
 
 onMounted(() => {
   loadConfig();
+  loadConversations();
   window.addEventListener("ai-config-changed", handleAiConfigChanged as EventListener);
 });
 
@@ -244,6 +394,7 @@ watch(
   async (val) => {
     if (val) {
       await loadConfig();
+      await loadConversations();
       scrollToBottom();
     }
   }
@@ -402,7 +553,79 @@ const stopGeneration = () => {
   const currentTask = tasks.value[tasks.value.length - 1];
   if (currentTask && currentTask.status === "processing") {
     currentTask.status = "completed";
-    saveChatHistory();
+    saveConversation();
+  }
+};
+
+// 生成对话标题（使用 AI）
+const generateTitle = async (userMessage: string, aiResponse: string): Promise<string> => {
+  try {
+    const messages: ChatMessage[] = [
+      {
+        role: "system",
+        content: "你是一个标题生成器。根据用户的问题和AI的回复，生成一个简短的对话标题（不超过20个字符）。只输出标题本身，不要有任何其他内容。"
+      },
+      {
+        role: "user",
+        content: `用户问题：${userMessage}\n\nAI回复开头：${aiResponse.slice(0, 200)}`
+      }
+    ];
+
+    const response = await AIApi.chatDirect(config.value, messages);
+    let title = response.choices[0]?.message?.content?.trim() || "新对话";
+    // 限制长度
+    if (title.length > 20) {
+      title = title.slice(0, 20) + "...";
+    }
+    return title;
+  } catch (err) {
+    console.error("生成标题失败", err);
+    // 使用用户消息的前20个字符作为标题
+    return userMessage.slice(0, 20) + (userMessage.length > 20 ? "..." : "");
+  }
+};
+
+// 保存对话
+const saveConversation = async () => {
+  const contentJson = JSON.stringify(tasks.value.map(t => ({
+    id: t.id,
+    userTask: t.userTask,
+    reasoning: t.reasoning,
+    output: t.output,
+    agentResponse: t.agentResponse ? {
+      plan: t.agentResponse.plan,
+      changes: t.agentResponse.changes.map(c => ({
+        type: c.type,
+        position: c.position,
+        oldText: c.oldText,
+        content: c.content,
+      })),
+      explanation: t.agentResponse.explanation,
+    } : undefined,
+    status: t.status,
+    timestamp: t.timestamp,
+    mode: t.mode,
+  })));
+
+  try {
+    if (currentConversationId.value) {
+      // 更新现有对话
+      await AIApi.updateConversation({
+        id: currentConversationId.value,
+        content: contentJson,
+      });
+    } else if (tasks.value.length > 0) {
+      // 创建新对话
+      const res = await AIApi.addConversation({
+        title: "新对话",
+        content: contentJson,
+      });
+      currentConversationId.value = res.data.id;
+      isFirstAiResponse.value = false;
+      await loadConversations();
+    }
+  } catch (err) {
+    console.error("保存对话失败", err);
   }
 };
 
@@ -420,6 +643,7 @@ const sendMessage = async () => {
   inputText.value = "";
 
   const isAgentMode = mode.value === "agent" && config.value.docContextEnabled;
+  const needGenerateTitle = !currentConversationId.value && tasks.value.length === 0;
 
   const task: TaskBlock = {
     id: Date.now().toString(),
@@ -533,7 +757,19 @@ const sendMessage = async () => {
   } finally {
     sending.value = false;
     abortController.value = null;
-    await saveChatHistory();
+    await saveConversation();
+
+    // 如果是新对话的第一次AI回复，生成标题
+    if (needGenerateTitle && task.status === "completed" && currentConversationId.value) {
+      const title = await generateTitle(userInput, task.output);
+      try {
+        await AIApi.updateConversationTitle(currentConversationId.value, title);
+        await loadConversations();
+      } catch (err) {
+        console.error("更新标题失败", err);
+      }
+    }
+
     scrollToBottom();
   }
 };
@@ -547,15 +783,29 @@ const scrollToBottom = () => {
   });
 };
 
-// 清空历史
-const clearHistory = async () => {
-  if (sending.value) {
-    stopGeneration();
+// 删除当前对话
+const deleteCurrentConversation = async () => {
+  if (!currentConversationId.value) return;
+
+  try {
+    await ElMessageBox.confirm("确定要删除当前对话吗？", "提示", {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+      type: "warning",
+    });
+
+    await AIApi.deleteConversation(currentConversationId.value);
+    currentConversationId.value = "";
+    tasks.value = [];
+    expandedReasonings.value.clear();
+    await loadConversations();
+    ElMessage.success("对话已删除");
+  } catch (err: any) {
+    if (err !== "cancel") {
+      console.error("删除对话失败", err);
+      ElMessage.error("删除失败");
+    }
   }
-  tasks.value = [];
-  expandedReasonings.value.clear();
-  await AIConfigStore.removeChatHistory();
-  ElMessage.success("会话已清空");
 };
 
 // 导出对话历史
@@ -616,16 +866,9 @@ const deleteTask = async (index: number) => {
     expandedReasonings.value.delete(task.id);
     // 从数组中删除
     tasks.value = tasks.value.filter((_, i) => i !== index);
-    await saveChatHistory();
+    await saveConversation();
     ElMessage.success("已删除该对话");
   }
-};
-
-// 保存聊天历史
-const saveChatHistory = async () => {
-  // 只保留最近20条
-  const toSave = tasks.value.slice(-20);
-  await AIConfigStore.setChatHistory(toSave);
 };
 
 // 应用变更
@@ -759,6 +1002,59 @@ const stopResize = () => {
       :deep(.el-button) {
         padding: 4px;
         margin: 0;
+      }
+    }
+  }
+}
+
+.conversation-bar {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  gap: 8px;
+  border-bottom: 1px solid #e4e7ed;
+  flex-shrink: 0;
+
+  .search-area {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    .el-input {
+      width: 120px;
+    }
+  }
+
+  .conversation-select {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .conversation-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+
+    .conv-title {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin-right: 12px;
+    }
+
+    .conv-time {
+      font-size: 11px;
+      color: #909399;
+      flex-shrink: 0;
+      text-align: right;
+    }
+
+    &.is-current {
+      .conv-time {
+        font-weight: 600;
       }
     }
   }

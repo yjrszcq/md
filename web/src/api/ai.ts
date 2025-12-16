@@ -89,6 +89,84 @@ class AIApi {
     });
   }
 
+  // ========== 对话记录 API ==========
+
+  /**
+   * 获取对话列表
+   */
+  getConversationList() {
+    return request<AIConversationListItem[]>({
+      method: "get",
+      url: "/conversation/list",
+    });
+  }
+
+  /**
+   * 搜索对话
+   */
+  searchConversations(keyword: string) {
+    return request<AIConversationListItem[]>({
+      method: "post",
+      url: "/conversation/search",
+      data: { keyword },
+    });
+  }
+
+  /**
+   * 获取对话详情
+   */
+  getConversation(id: string) {
+    return request<AIConversation>({
+      method: "post",
+      url: "/conversation/get",
+      data: { id },
+    });
+  }
+
+  /**
+   * 创建对话
+   */
+  addConversation(data: AIConversationCondition) {
+    return request<{ id: string }>({
+      method: "post",
+      url: "/conversation/add",
+      data,
+    });
+  }
+
+  /**
+   * 更新对话
+   */
+  updateConversation(data: AIConversationCondition) {
+    return request({
+      method: "post",
+      url: "/conversation/update",
+      data,
+    });
+  }
+
+  /**
+   * 更新对话标题
+   */
+  updateConversationTitle(id: string, title: string) {
+    return request({
+      method: "post",
+      url: "/conversation/update-title",
+      data: { id, title },
+    });
+  }
+
+  /**
+   * 删除对话
+   */
+  deleteConversation(id: string) {
+    return request({
+      method: "post",
+      url: "/conversation/delete",
+      data: { id },
+    });
+  }
+
   /**
    * 直接获取模型列表（前端直接调用AI API）
    */

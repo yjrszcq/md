@@ -75,6 +75,16 @@ func InitRouter(app *iris.Application) {
 				ai.Get("/config/exists", AIConfigExists)
 				ai.Get("/config/full", AIConfigGetFull)
 			})
+
+			data.PartyFunc("/conversation", func(conv iris.Party) {
+				conv.Get("/list", AIConversationList)
+				conv.Post("/search", AIConversationSearch)
+				conv.Post("/get", AIConversationGet)
+				conv.Post("/add", AIConversationAdd)
+				conv.Post("/update", AIConversationUpdate)
+				conv.Post("/update-title", AIConversationUpdateTitle)
+				conv.Post("/delete", AIConversationDelete)
+			})
 		})
 	})
 }

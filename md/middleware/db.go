@@ -104,6 +104,21 @@ CREATE UNIQUE INDEX IF NOT EXISTS "ai_config_user_id"
 ON "t_ai_config" (
   "user_id" ASC
 );
+
+CREATE TABLE IF NOT EXISTS t_ai_conversation
+(
+	id varchar(50) PRIMARY KEY NOT NULL,
+	user_id varchar(50) NOT NULL,
+	title text NOT NULL DEFAULT '新对话',
+	content text NOT NULL DEFAULT '[]',
+	create_time bigint NOT NULL,
+	update_time bigint NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS "ai_conversation_user_id"
+ON "t_ai_conversation" (
+  "user_id" ASC
+);
 `
 
 // 初始化数据库连接

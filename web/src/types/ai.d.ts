@@ -123,3 +123,28 @@ interface AIConfigExport {
   exportTime: number;
   config: AIConfig;
 }
+
+// AI对话记录
+interface AIConversation {
+  id: string;
+  title: string;
+  content: string; // JSON存储的TaskBlock[]
+  createTime: number;
+  updateTime: number;
+}
+
+// AI对话列表项
+interface AIConversationListItem {
+  id: string;
+  title: string;
+  createTime: number;
+  updateTime: number;
+}
+
+// 对话请求条件
+interface AIConversationCondition {
+  id?: string;
+  title?: string;
+  content?: string;
+  keyword?: string;
+}
