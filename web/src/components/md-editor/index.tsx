@@ -1,8 +1,9 @@
-import { defineComponent } from "vue";
+import { defineComponent, Fragment } from "vue";
 import { MdEditor, NormalToolbar } from "md-editor-v3";
 import "md-editor-v3/lib/style.css";
 import { generateId } from "./config";
 import SvgIcon from "@/components/svg-icon";
+import { ChatDotSquare } from "@element-plus/icons-vue";
 
 export default defineComponent({
   name: "MdEditor",
@@ -62,7 +63,7 @@ export default defineComponent({
           mdHeadingId={generateId}
           noMermaid
           defToolbars={
-            <>
+            <Fragment>
               <NormalToolbar
                 title="导出"
                 onClick={exportClick}
@@ -78,12 +79,12 @@ export default defineComponent({
                   onClick={aiClick}
                   trigger={
                     <div class="md-editor-icon">
-                      <SvgIcon className="icon-ai" name="ai"></SvgIcon>
+                      <ChatDotSquare />
                     </div>
                   }
                 ></NormalToolbar>
               )}
-            </>
+            </Fragment>
           }
         />
       );
