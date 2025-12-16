@@ -17,7 +17,7 @@ const getModelsKey = () => {
 
 // 获取同步状态key
 const getSyncKey = () => {
-  return "AISaveToServer_" + Token.getName();
+  return "AISyncToServer_" + Token.getName();
 };
 
 // 获取侧边栏宽度key
@@ -111,16 +111,16 @@ class AIConfigStore {
   }
 
   /**
-   * 设置同步到服务器状态
+   * 设置与服务器同步状态
    */
-  setSaveToServer(enabled: boolean): void {
+  setSyncToServer(enabled: boolean): void {
     localStorage.setItem(getSyncKey(), String(enabled));
   }
 
   /**
-   * 获取同步到服务器状态
+   * 获取与服务器同步状态
    */
-  getSaveToServer(): boolean {
+  getSyncToServer(): boolean {
     return localStorage.getItem(getSyncKey()) === "true";
   }
 
@@ -200,7 +200,7 @@ class AIConfigStore {
     const keysToRemove: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key && (key.startsWith("AISaveToServer_") || key === "AISidebarWidth")) {
+      if (key && (key.startsWith("AISyncToServer_") || key === "AISidebarWidth")) {
         keysToRemove.push(key);
       }
     }

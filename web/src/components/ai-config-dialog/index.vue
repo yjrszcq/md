@@ -85,7 +85,7 @@
       <!-- 同步设置 -->
       <el-tab-pane label="同步设置" name="sync">
         <el-form label-width="140px" label-position="left">
-          <el-form-item label="保存到服务器">
+          <el-form-item label="与服务器同步">
             <el-switch v-model="saveToServer" @change="handleSyncChange" :loading="syncLoading" />
             <span class="form-tip">开启后配置将同步到服务器，支持多设备</span>
           </el-form-item>
@@ -230,7 +230,7 @@ onMounted(() => {
 
 // 加载配置
 const loadConfig = async () => {
-  saveToServer.value = AIConfigStore.getSaveToServer();
+  saveToServer.value = AIConfigStore.getSyncToServer();
   const localConfig = await AIConfigStore.getConfig();
   form.value = { ...localConfig };
 
@@ -354,7 +354,7 @@ const handleSyncChange = async (enabled: boolean) => {
       } else {
         // 直接保存到服务器
         await saveConfigToServer();
-        AIConfigStore.setSaveToServer(true);
+        AIConfigStore.setSyncToServer(true);
         ElMessage.success("已开启服务器同步");
       }
     } catch (err: any) {
@@ -379,12 +379,12 @@ const handleSyncChange = async (enabled: boolean) => {
         } catch (err: any) {
           ElMessage.error(err.message || "删除失败");
         }
-        AIConfigStore.setSaveToServer(false);
+        AIConfigStore.setSyncToServer(false);
       })
       .catch((action) => {
         if (action === "cancel") {
           // 保留备份
-          AIConfigStore.setSaveToServer(false);
+          AIConfigStore.setSyncToServer(false);
           ElMessage.info("已关闭同步，服务器备份已保留");
         } else {
           // 取消操作
@@ -415,7 +415,7 @@ const doOverwrite = async (exportFirst: boolean) => {
   }
   overwriteDialogVisible.value = false;
   await saveConfigToServer();
-  AIConfigStore.setSaveToServer(true);
+  AIConfigStore.setSyncToServer(true);
   saveToServer.value = true;
   ElMessage.success("已覆盖服务器配置");
 };
@@ -431,7 +431,7 @@ const doUseServer = async (exportFirst: boolean) => {
     form.value = { ...serverConfig.value };
     await AIConfigStore.setConfig(form.value);
   }
-  AIConfigStore.setSaveToServer(true);
+  AIConfigStore.setSyncToServer(true);
   saveToServer.value = true;
   ElMessage.success("已使用服务器配置");
 };
