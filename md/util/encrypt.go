@@ -240,11 +240,24 @@ func pkcs7Padding(message []byte, blockSize int) []byte {
 	return append(message, padText...)
 }
 
-// PKCS7反填充
-func pkcs7UnPadding(message []byte) []byte {
+// PKCS7 unpadding with validation.
+// Returns error if padding is invalid.
+func pkcs7UnPadding(message []byte) ([]byte, error) {
 	length := len(message)
+	if length == 0 {
+		return nil, errors.New("empty message")
+	}
 	unPadding := int(message[length-1])
-	return message[:(length - unPadding)]
+	if unPadding == 0 || unPadding > length || unPadding > 16 {
+		return nil, errors.New("invalid padding")
+	}
+	// Verify all padding bytes are correct
+	for i := length - unPadding; i < length; i++ {
+		if message[i] != byte(unPadding) {
+			return nil, errors.New("invalid padding")
+		}
+	}
+	return message[:(length - unPadding)], nil
 }
 
 // 将key向上填充为16位、24位、32位，超过32位则截取前32位
@@ -269,7 +282,8 @@ func paddingKey(key string) []byte {
 	return keyByte
 }
 
-// AES加密，CBC
+// AES encrypt using CBC mode with random IV.
+// The IV is prepended to the ciphertext.
 func EncryptAES(message, key string, isHex bool) (res string, err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -284,16 +298,29 @@ func EncryptAES(message, key string, isHex bool) (res string, err error) {
 	}
 	blockSize := block.BlockSize()
 	messageByte = pkcs7Padding(messageByte, blockSize)
-	blockMode := cipher.NewCBCEncrypter(block, keyByte[:blockSize])
-	result := make([]byte, len(messageByte))
-	blockMode.CryptBlocks(result, messageByte)
-	if isHex {
-		return hex.EncodeToString(result), err
+
+	// Generate random IV for each encryption
+	iv := make([]byte, blockSize)
+	if _, err = rand.Read(iv); err != nil {
+		return "", err
 	}
-	return EncryptBASE64(result), err
+
+	blockMode := cipher.NewCBCEncrypter(block, iv)
+	ciphertext := make([]byte, len(messageByte))
+	blockMode.CryptBlocks(ciphertext, messageByte)
+
+	// Prepend IV to ciphertext
+	result := append(iv, ciphertext...)
+
+	if isHex {
+		return hex.EncodeToString(result), nil
+	}
+	return EncryptBASE64(result), nil
 }
 
-// AES解密，CBC
+// AES decrypt using CBC mode.
+// Expects IV prepended to ciphertext.
+// For backward compatibility, also supports legacy format without IV prefix.
 func DecryptAES(message, key string, isHex bool) (res string, err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -309,15 +336,40 @@ func DecryptAES(message, key string, isHex bool) (res string, err error) {
 	if err != nil {
 		return "", err
 	}
+
 	keyByte := paddingKey(key)
 	block, err := aes.NewCipher(keyByte)
 	if err != nil {
 		return "", err
 	}
 	blockSize := block.BlockSize()
-	blockMode := cipher.NewCBCDecrypter(block, keyByte[:blockSize])
-	result := make([]byte, len(messageByte))
-	blockMode.CryptBlocks(result, messageByte)
-	result = pkcs7UnPadding(result)
-	return string(result), err
+
+	// Try new format first (IV prepended)
+	if len(messageByte) >= blockSize*2 {
+		iv := messageByte[:blockSize]
+		ciphertext := messageByte[blockSize:]
+
+		blockMode := cipher.NewCBCDecrypter(block, iv)
+		plaintext := make([]byte, len(ciphertext))
+		blockMode.CryptBlocks(plaintext, ciphertext)
+
+		result, unpadErr := pkcs7UnPadding(plaintext)
+		if unpadErr == nil {
+			return string(result), nil
+		}
+	}
+
+	// Fall back to legacy format (key as IV) for backward compatibility
+	if len(messageByte) >= blockSize {
+		blockMode := cipher.NewCBCDecrypter(block, keyByte[:blockSize])
+		plaintext := make([]byte, len(messageByte))
+		blockMode.CryptBlocks(plaintext, messageByte)
+
+		result, unpadErr := pkcs7UnPadding(plaintext)
+		if unpadErr == nil {
+			return string(result), nil
+		}
+	}
+
+	return "", errors.New("decryption failed")
 }
