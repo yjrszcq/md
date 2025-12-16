@@ -14,12 +14,17 @@
       <div class="header-right">
         <span class="model-name" :title="config.model">{{ config.model || "未配置模型" }}</span>
         <span class="status-dot" :class="statusClass"></span>
-        <el-button text size="small" @click="clearHistory" title="清空会话">
-          <el-icon><Delete /></el-icon>
-        </el-button>
-        <el-button text size="small" @click="emit('close')" title="关闭">
-          <el-icon><Close /></el-icon>
-        </el-button>
+        <div class="header-actions">
+          <el-button text size="small" @click="exportHistory" title="导出对话" :disabled="tasks.length === 0">
+            <el-icon><Download /></el-icon>
+          </el-button>
+          <el-button text size="small" @click="clearHistory" title="清空会话">
+            <el-icon><Delete /></el-icon>
+          </el-button>
+          <el-button text size="small" @click="emit('close')" title="关闭">
+            <el-icon><Close /></el-icon>
+          </el-button>
+        </div>
       </div>
     </div>
 
@@ -152,7 +157,7 @@
 <script lang="ts" setup>
 import { ref, shallowRef, computed, watch, onMounted, onUnmounted, nextTick, triggerRef } from "vue";
 import { ElMessage } from "element-plus";
-import { Delete, Close, Warning, ArrowRight, VideoPause } from "@element-plus/icons-vue";
+import { Delete, Close, Warning, ArrowRight, VideoPause, Download } from "@element-plus/icons-vue";
 import { MdPreview } from "md-editor-v3";
 import "md-editor-v3/lib/preview.css";
 import AIApi from "@/api/ai";
@@ -553,6 +558,56 @@ const clearHistory = async () => {
   ElMessage.success("会话已清空");
 };
 
+// 导出对话历史
+const exportHistory = () => {
+  if (tasks.value.length === 0) {
+    ElMessage.warning("没有可导出的对话");
+    return;
+  }
+
+  // 构建导出数据，移除运行时状态
+  const exportData = {
+    version: "1.0",
+    exportTime: Date.now(),
+    model: config.value.model,
+    tasks: tasks.value.map((task) => ({
+      id: task.id,
+      userTask: task.userTask,
+      reasoning: task.reasoning,
+      output: task.output,
+      agentResponse: task.agentResponse
+        ? {
+            plan: task.agentResponse.plan,
+            changes: task.agentResponse.changes.map((c) => ({
+              type: c.type,
+              position: c.position,
+              oldText: c.oldText,
+              content: c.content,
+            })),
+            explanation: task.agentResponse.explanation,
+          }
+        : undefined,
+      status: task.status,
+      timestamp: task.timestamp,
+      mode: task.mode,
+    })),
+  };
+
+  const json = JSON.stringify(exportData, null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `ai-chat-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  ElMessage.success("对话已导出");
+};
+
 // 删除单条对话
 const deleteTask = async (index: number) => {
   const task = tasks.value[index];
@@ -693,6 +748,17 @@ const stopResize = () => {
       }
       &.status-error {
         background: #f56c6c;
+      }
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      margin-left: 4px;
+
+      :deep(.el-button) {
+        padding: 4px;
+        margin: 0;
       }
     }
   }
