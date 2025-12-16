@@ -80,6 +80,10 @@ func AIConversationAdd(userId string, condition entity.AIConversationCondition) 
 
 // 更新对话
 func AIConversationUpdate(userId string, condition entity.AIConversationCondition) {
+	if condition.Id == "" {
+		panic(common.NewError("对话ID不可为空"))
+	}
+
 	tx := middleware.DbW.MustBegin()
 	defer tx.Rollback()
 

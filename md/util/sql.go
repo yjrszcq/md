@@ -158,9 +158,16 @@ func (s *SqlCompletion) Order(field string, isAsc bool) *SqlCompletion {
 	return s
 }
 
+// Maximum allowed page size to prevent abuse
+const maxPageSize = 100
+
 // 分页，只设置最后一次
 func (s *SqlCompletion) Limit(page, size int) *SqlCompletion {
 	if page > 0 && size > 0 {
+		// Cap size to prevent excessive data retrieval
+		if size > maxPageSize {
+			size = maxPageSize
+		}
 		offset := size * (page - 1)
 		s.paramIndex = s.paramIndex + 1
 		paramPlaceholder1 := "$" + strconv.Itoa(s.paramIndex)

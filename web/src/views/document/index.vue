@@ -31,7 +31,7 @@
               :disabled="onlyPreview || mdLoading"
               noRadius
               @save="saveDoc(currentDoc.content)"
-              @ready="codemirrorReday"
+              @ready="codemirrorReady"
             />
           </div>
         </template>
@@ -48,7 +48,7 @@
           :showAiButton="aiConfig.panelEnabled"
           @onUploadImg="uploadImage"
           @onSave="saveDoc"
-          @export="exporMarkdown(currentDoc.name, currentDoc.content)"
+          @export="exportMarkdown(currentDoc.name, currentDoc.content)"
           @aiToggle="toggleAiSidebar"
         />
       </template>
@@ -79,7 +79,7 @@ import AIConfigStore from "@/store/ai-config";
 import Token from "@/store/token";
 import { host } from "@/config";
 import crypto from "crypto-js";
-import { exporMarkdown, exportOpenApi } from "./util";
+import { exportMarkdown, exportOpenApi } from "./util";
 
 defineProps({
   onlyPreview: {
@@ -210,7 +210,7 @@ const docChange = (id: string, name: string, content: string, type: string, upda
 /**
  * codemirror加载完成
  */
-const codemirrorReday = () => {
+const codemirrorReady = () => {
   setTimeout(() => {
     if (codemirrorRef.value) {
       codemirrorRef.value.$el.getElementsByClassName("cm-scroller")[0].scrollTop = 0;

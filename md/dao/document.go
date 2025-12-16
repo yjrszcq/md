@@ -78,7 +78,7 @@ func DocumentGetPublished(db *sqlx.DB, id string) (entity.Document, error) {
 }
 
 // 分页查询公开发布文档列表
-func DocumentPagePulished(db *sqlx.DB, pageCondition common.PageCondition[entity.DocumentPageCondition]) ([]entity.DocumentPageResult, int, error) {
+func DocumentPagePublished(db *sqlx.DB, pageCondition common.PageCondition[entity.DocumentPageCondition]) ([]entity.DocumentPageResult, int, error) {
 	sqlCompletion := util.SqlCompletion{}
 	sqlCompletion.InitSql(
 		`select a.id, a.name, a.type, a.create_time, a.update_time, COALESCE(b.name, '') as username, COALESCE(c.name, '') as book_name 

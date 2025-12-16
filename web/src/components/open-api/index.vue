@@ -57,25 +57,34 @@ watch(
  * @param val
  */
 const postMessage = (val: object) => {
-  openApiRef.value?.contentWindow?.postMessage(JSON.stringify(val), "*");
+  openApiRef.value?.contentWindow?.postMessage(JSON.stringify(val), hostUrl.value);
 };
 
 /**
  * 接收iframe消息
  * @param e
  */
-const receiveMessage = (e: any) => {
-  let data = JSON.parse(e.data);
-  if (data.type === "url") {
-    let pathArr = window.location.href.split("#");
-    let path = pathArr[0] + "#" + pathArr[1];
-    if (pathArr.length >= 2) {
-      if (!path.endsWith("/")) {
-        path += "/";
+const receiveMessage = (e: MessageEvent) => {
+  // Verify message origin
+  if (e.origin !== hostUrl.value) {
+    return;
+  }
+
+  try {
+    const data = JSON.parse(e.data);
+    if (data.type === "url" && typeof data.val === "string") {
+      const pathArr = window.location.href.split("#");
+      let path = pathArr[0] + "#" + pathArr[1];
+      if (pathArr.length >= 2) {
+        if (!path.endsWith("/")) {
+          path += "/";
+        }
+        path = path + "#" + data.val;
+        window.location.href = path;
       }
-      path = path + "#" + data.val;
-      window.location.href = path;
     }
+  } catch {
+    // Ignore invalid messages
   }
 };
 </script>

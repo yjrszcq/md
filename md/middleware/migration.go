@@ -5,9 +5,6 @@ import (
 	"time"
 )
 
-// Database schema version - increment this when adding new migrations
-const currentDBVersion = 1
-
 // Migration represents a database migration
 type Migration struct {
 	Version     int

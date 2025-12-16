@@ -243,7 +243,8 @@ const filteredConversations = computed(() => {
   if (!searchKeyword.value) {
     return conversations.value;
   }
-  return conversations.value;
+  const keyword = searchKeyword.value.toLowerCase();
+  return conversations.value.filter((c) => c.title.toLowerCase().includes(keyword));
 });
 
 // 格式化时间

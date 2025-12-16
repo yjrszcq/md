@@ -3,11 +3,18 @@ import axios from "axios";
 import { ElMessage } from "element-plus";
 
 /**
+ * Escape special characters for safe embedding in JavaScript template literals
+ */
+const escapeForTemplateLiteral = (str: string): string => {
+  return str.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\$/g, "\\$");
+};
+
+/**
  * 导出Markdown
  * @param name 文档名称
  * @param content 文档内容
  */
-export const exporMarkdown = (name: string, content: string) => {
+export const exportMarkdown = (name: string, content: string) => {
   saveAs(new Blob([content], { type: "text/plain;charset=utf-8" }), `${name}.md`);
 };
 
@@ -69,7 +76,7 @@ export const exportOpenApi = (name: string, content: string) => {
       child.setAttribute("router", "hash");
       child.setAttribute("hideExport", true);
       child.setAttribute("hideSchemas", true);
-      child.setAttribute("apiDescriptionDocument", \`${content}\`);
+      child.setAttribute("apiDescriptionDocument", \`${escapeForTemplateLiteral(content)}\`);
       document.body.appendChild(child);
     <\/script>
   </body>

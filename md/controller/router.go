@@ -17,7 +17,7 @@ func InitRouter(app *iris.Application) {
 		// 开放接口
 		api.PartyFunc("/open", func(open iris.Party) {
 			open.Get("/doc/get/{id}", DocumentGetPublished)
-			open.Post("/doc/page", DocumentPagePulished)
+			open.Post("/doc/page", DocumentPagePublished)
 		})
 
 		// token相关接口

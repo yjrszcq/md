@@ -129,16 +129,16 @@ const props = defineProps({
   },
   currentDoc: {
     type: Object as PropType<CurrentDoc>,
-    default: {
+    default: () => ({
       id: "",
       content: "",
       originMD5: "",
       updateTime: "",
-    },
+    }),
   },
   books: {
     type: Array as PropType<Book[]>,
-    default: [],
+    default: () => [],
   },
 });
 

@@ -66,8 +66,8 @@ func DocumentGetPublished(ctx iris.Context) {
 }
 
 // 分页查询公开发布文档列表
-func DocumentPagePulished(ctx iris.Context) {
+func DocumentPagePublished(ctx iris.Context) {
 	pageCondition := common.PageCondition[entity.DocumentPageCondition]{}
 	resolveParam(ctx, &pageCondition)
-	ctx.JSON(common.NewSuccessData("查询成功", service.DocumentPagePulished(pageCondition)))
+	ctx.JSON(common.NewSuccessData("查询成功", service.DocumentPagePublished(pageCondition)))
 }

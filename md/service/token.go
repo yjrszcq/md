@@ -128,6 +128,12 @@ func TokenRefresh(refreshToken string) common.TokenResult {
 		panic(common.NewError("认证信息已过期，请重新登录"))
 	}
 
+	// Delete old tokens before generating new ones
+	if tokenCache.AccessToken != "" {
+		cache2go.Cache(common.AccessTokenCache).Delete(tokenCache.AccessToken)
+	}
+	cache2go.Cache(common.RefreshTokenCache).Delete(refreshToken)
+
 	// 重新生成token
 	tokenResult := common.TokenResult{}
 	tokenResult.Name = tokenCache.Name
