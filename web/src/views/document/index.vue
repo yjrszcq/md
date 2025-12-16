@@ -257,11 +257,16 @@ const toggleAiSidebar = () => {
 let highlightStyleEl: HTMLStyleElement | null = null;
 
 const scrollToAndSelect = (startIndex: number, endIndex: number) => {
-  // Wait for editor to re-render after mdKey change
+  // Wait for editor to fully re-render after mdKey change
   setTimeout(() => {
     nextTick(() => {
       const content = currentDoc.value.content;
-      const beforeText = content.slice(0, startIndex);
+
+      // Boundary check
+      const safeStart = Math.min(startIndex, content.length);
+      const safeEnd = Math.min(endIndex, content.length);
+
+      const beforeText = content.slice(0, safeStart);
       const startLine = beforeText.split('\n').length;
 
       // Find CodeMirror content element
@@ -280,7 +285,7 @@ const scrollToAndSelect = (startIndex: number, endIndex: number) => {
 
       // Apply highlight style first (survives image re-renders)
       const style = document.createElement('style');
-      if (startIndex === endIndex) {
+      if (safeStart === safeEnd) {
         // Point indicator for insert undo / delete apply
         style.textContent = `
           .editor-view .cm-content .cm-line:nth-child(${startLine})::after {
@@ -294,7 +299,7 @@ const scrollToAndSelect = (startIndex: number, endIndex: number) => {
         `;
       } else {
         // Normal range highlight
-        const changeText = content.slice(startIndex, endIndex);
+        const changeText = content.slice(safeStart, safeEnd);
         const lineCount = changeText.split('\n').length;
         const endLine = startLine + lineCount - 1;
 
@@ -311,9 +316,11 @@ const scrollToAndSelect = (startIndex: number, endIndex: number) => {
       document.head.appendChild(style);
       highlightStyleEl = style;
 
-      // Scroll function
+      // Scroll function - re-query elements as DOM may have changed
       const doScroll = () => {
-        const freshLines = editorEl.querySelectorAll('.cm-line');
+        const freshEditorEl = document.querySelector('.editor-view .cm-content') as HTMLElement;
+        if (!freshEditorEl) return;
+        const freshLines = freshEditorEl.querySelectorAll('.cm-line');
         const freshTarget = freshLines[startLine - 1] as HTMLElement;
         if (freshTarget) {
           freshTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -326,7 +333,7 @@ const scrollToAndSelect = (startIndex: number, endIndex: number) => {
       }
 
       // Second scroll after images likely loaded
-      setTimeout(doScroll, 400);
+      setTimeout(doScroll, 500);
 
       // Remove highlight after delay
       setTimeout(() => {
@@ -336,7 +343,7 @@ const scrollToAndSelect = (startIndex: number, endIndex: number) => {
         }
       }, 2500);
     });
-  }, 150);
+  }, 300);
 };
 
 /**

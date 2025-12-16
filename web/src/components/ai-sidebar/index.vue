@@ -656,6 +656,7 @@ const stopGeneration = () => {
   abortController.value?.abort();
   abortController.value = null;
   sending.value = false;
+  autoScrollEnabled.value = true;
 
   // 更新当前任务状态
   const currentTask = tasks.value[tasks.value.length - 1];
@@ -874,6 +875,7 @@ const sendMessage = async () => {
     triggerRef(tasks);
   } finally {
     sending.value = false;
+    autoScrollEnabled.value = true;
     abortController.value = null;
     await saveConversation();
 
@@ -905,14 +907,15 @@ const handleTaskBlocksScroll = () => {
   if (!sending.value || !taskBlocksRef.value) return;
 
   const { scrollTop } = taskBlocksRef.value;
+  const scrollDelta = scrollTop - lastScrollTop.value;
 
-  // User scrolled up - disable auto scroll
-  if (scrollTop < lastScrollTop.value - 10) {
+  // User scrolled up - disable auto scroll (any upward movement)
+  if (scrollDelta < -5) {
     autoScrollEnabled.value = false;
   }
 
-  // User scrolled to near bottom - re-enable auto scroll
-  if (isNearBottom()) {
+  // User actively scrolled down and reached near bottom - re-enable
+  if (scrollDelta > 5 && isNearBottom()) {
     autoScrollEnabled.value = true;
   }
 
