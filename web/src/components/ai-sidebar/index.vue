@@ -6,10 +6,7 @@
     <!-- 顶部工具栏 -->
     <div class="sidebar-header">
       <div class="header-left">
-        <el-select v-model="mode" size="small" style="width: 90px" @change="handleModeChange">
-          <el-option label="Chat" value="chat" />
-          <el-option label="Agent" value="agent" />
-        </el-select>
+        <span class="sidebar-title">AI 对话</span>
       </div>
       <div class="header-right">
         <span class="model-name" :title="config.model">{{ config.model || "未配置模型" }}</span>
@@ -118,79 +115,12 @@
           </div>
         </div>
 
-        <!-- AI 输出（Chat模式流式显示，Agent模式仅显示说明） -->
-        <div class="ai-output" v-if="task.output || (task.status === 'processing' && task.mode !== 'agent')">
+        <!-- AI 输出 -->
+        <div class="ai-output" v-if="task.output || task.status === 'processing'">
           <div class="task-label">Output</div>
           <div class="output-content">
-            <!-- Agent 模式的格式化输出：显示解析后的说明，原始 JSON 可折叠查看 -->
-            <template v-if="task.mode === 'agent' && task.agentResponse">
-              <MdPreview v-if="task.agentResponse.explanation" :modelValue="task.agentResponse.explanation" previewTheme="cyanosis" />
-              <div class="raw-output-toggle" @click="toggleRawOutput(task.id)">
-                <el-icon :class="{ 'is-expanded': expandedRawOutputs.has(task.id) }">
-                  <ArrowRight />
-                </el-icon>
-                <span>查看原始输出</span>
-              </div>
-              <div v-show="expandedRawOutputs.has(task.id)" class="raw-output-content">
-                <pre>{{ task.output }}</pre>
-              </div>
-            </template>
-            <!-- Agent 模式流式输出中：显示原始内容（可折叠） -->
-            <template v-else-if="task.mode === 'agent' && task.status === 'processing' && task.output">
-              <div class="raw-output-toggle" @click="toggleRawOutput(task.id)">
-                <el-icon :class="{ 'is-expanded': expandedRawOutputs.has(task.id) }">
-                  <ArrowRight />
-                </el-icon>
-                <span>查看流式输出</span>
-              </div>
-              <div v-show="expandedRawOutputs.has(task.id)" class="raw-output-content">
-                <pre>{{ task.output }}</pre>
-              </div>
-            </template>
-            <!-- Chat 模式或 Agent 模式无格式化内容：直接显示 -->
-            <template v-else>
-              <MdPreview v-if="task.output" :modelValue="getMarkdownContent(task)" previewTheme="cyanosis" />
-              <span v-else-if="task.status === 'processing'" class="cursor-blink">▋</span>
-            </template>
-          </div>
-        </div>
-
-        <!-- Agent 模式加载状态（放在输出下方） -->
-        <div v-if="task.status === 'processing' && task.mode === 'agent'" class="agent-loading">
-          <div class="loading-spinner"></div>
-          <span class="loading-text">AI 正在分析文档并生成修改建议...</span>
-        </div>
-
-        <!-- Agent 变更建议 -->
-        <div v-if="task.agentResponse?.changes?.length" class="agent-changes">
-          <div class="task-label">Proposed Changes</div>
-          <div v-for="(change, idx) in task.agentResponse.changes" :key="idx" class="change-item">
-            <div class="change-header">
-              <el-tag :type="getChangeTagType(change.type)" size="small">{{ change.type }}</el-tag>
-              <span class="change-position">{{ change.position }}</span>
-              <el-tag v-if="change.applied" type="success" size="small" class="applied-tag">已应用</el-tag>
-            </div>
-            <div class="change-content">
-              <pre>{{ change.content }}</pre>
-            </div>
-            <div class="change-actions">
-              <el-button
-                v-if="!change.applied"
-                size="small"
-                type="primary"
-                @click="applyChange(change, idx)"
-              >
-                应用此修改
-              </el-button>
-              <el-button
-                v-else
-                size="small"
-                type="warning"
-                @click="undoChange(change, idx)"
-              >
-                撤回此修改
-              </el-button>
-            </div>
+            <MdPreview v-if="task.output" :modelValue="task.output" previewTheme="cyanosis" />
+            <span v-else-if="task.status === 'processing'" class="cursor-blink">▋</span>
           </div>
         </div>
 
@@ -259,18 +189,14 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "close"): void;
-  (e: "applyChange", change: AgentChange, callback: (success: boolean, undoData?: { originalContent: string; appliedContent: string; undoStart: number; undoEnd: number }) => void): void;
-  (e: "undoChange", change: AgentChange, callback: (success: boolean) => void): void;
 }>();
 
-const mode = ref<"chat" | "agent">("chat");
 const inputText = ref("");
 const sending = ref(false);
 const sidebarWidth = ref(380);
 const tasks = shallowRef<TaskBlock[]>([]);
 const taskBlocksRef = ref<HTMLElement | null>(null);
 const expandedReasonings = ref<Set<string>>(new Set());
-const expandedRawOutputs = ref<Set<string>>(new Set());
 const abortController = ref<AbortController | null>(null);
 
 // Auto-scroll state
@@ -296,7 +222,6 @@ const config = ref<AIConfig>({
   model: "",
   systemPrompts: [],
   currentPromptId: "",
-  agentEnabled: false,
   docContextEnabled: false,
   panelEnabled: false,
 });
@@ -455,27 +380,8 @@ const handleSelectVisibleChange = (visible: boolean) => {
 
 // 监听 AI 配置变化事件
 const handleAiConfigChanged = (event: CustomEvent<AIConfig>) => {
-  const newConfig = event.detail;
-
-  // 如果文档上下文权限被关闭，自动切换到 Chat 模式
-  if (mode.value === "agent" && !newConfig.docContextEnabled) {
-    mode.value = "chat";
-  }
-
-  config.value = newConfig;
+  config.value = event.detail;
 };
-
-// 监听配置变化，确保模式与配置一致
-watch(
-  () => config.value,
-  (newConfig) => {
-    // 如果当前是 Agent 模式，但文档上下文权限被关闭，自动切换到 Chat 模式
-    if (mode.value === "agent" && !newConfig.docContextEnabled) {
-      mode.value = "chat";
-    }
-  },
-  { deep: true }
-);
 
 onMounted(() => {
   loadConfig();
@@ -508,9 +414,6 @@ const statusClass = computed(() => {
 
 // 输入框占位符
 const inputPlaceholder = computed(() => {
-  if (mode.value === "agent") {
-    return "描述你想要对文档进行的修改...";
-  }
   return "输入你的问题...";
 });
 
@@ -520,124 +423,6 @@ const toggleReasoning = (taskId: string) => {
     expandedReasonings.value.delete(taskId);
   } else {
     expandedReasonings.value.add(taskId);
-  }
-};
-
-// 切换原始输出展开/收起
-const toggleRawOutput = (taskId: string) => {
-  if (expandedRawOutputs.value.has(taskId)) {
-    expandedRawOutputs.value.delete(taskId);
-  } else {
-    expandedRawOutputs.value.add(taskId);
-  }
-};
-
-// 处理模式切换
-const handleModeChange = (newMode: "chat" | "agent") => {
-  if (newMode === "agent" && !config.value.docContextEnabled) {
-    // 如果选择 Agent 模式但未开启文档上下文权限，提示用户
-    ElMessage.warning("Agent 模式需要先在 AI 配置中开启「允许读取当前文档」权限");
-    // 切回 Chat 模式
-    nextTick(() => {
-      mode.value = "chat";
-    });
-  }
-};
-
-// 渲染 Markdown - 提取需要渲染的内容
-const getMarkdownContent = (task: TaskBlock) => {
-  // Agent 模式显示 explanation
-  if (task.mode === "agent" && task.agentResponse?.explanation) {
-    return task.agentResponse.explanation;
-  }
-  return task.output;
-};
-
-// 尝试增量解析 Agent 响应的 JSON
-const tryParseAgentResponse = (
-  task: TaskBlock,
-  lastParsedChangesCount: number,
-  onNewChanges: (newCount: number) => void
-) => {
-  const content = task.output;
-
-  // 尝试提取 changes 数组中已完成的对象
-  const changesMatch = content.match(/"changes"\s*:\s*\[/);
-  if (!changesMatch) return;
-
-  const changesStartIndex = changesMatch.index! + changesMatch[0].length;
-  const changesContent = content.slice(changesStartIndex);
-
-  // 逐个解析 change 对象
-  const changes: AgentChange[] = [];
-  let depth = 0;
-  let objectStart = -1;
-  let inString = false;
-  let escapeNext = false;
-
-  for (let i = 0; i < changesContent.length; i++) {
-    const char = changesContent[i];
-
-    if (escapeNext) {
-      escapeNext = false;
-      continue;
-    }
-
-    if (char === "\\") {
-      escapeNext = true;
-      continue;
-    }
-
-    if (char === '"' && !escapeNext) {
-      inString = !inString;
-      continue;
-    }
-
-    if (inString) continue;
-
-    if (char === "{") {
-      if (depth === 0) {
-        objectStart = i;
-      }
-      depth++;
-    } else if (char === "}") {
-      depth--;
-      if (depth === 0 && objectStart !== -1) {
-        // 找到一个完整的对象
-        const objectStr = changesContent.slice(objectStart, i + 1);
-        try {
-          const change = JSON.parse(objectStr) as AgentChange;
-          changes.push(change);
-        } catch {
-          // 解析失败，忽略
-        }
-        objectStart = -1;
-      }
-    } else if (char === "]" && depth === 0) {
-      // changes 数组结束
-      break;
-    }
-  }
-
-  // 如果解析到新的 changes，更新 task
-  if (changes.length > lastParsedChangesCount) {
-    if (!task.agentResponse) {
-      task.agentResponse = { plan: [], changes: [], explanation: "" };
-    }
-    task.agentResponse.changes = changes;
-    onNewChanges(changes.length);
-  }
-};
-
-// 获取变更标签类型
-const getChangeTagType = (type: string) => {
-  switch (type) {
-    case "insert":
-      return "success";
-    case "delete":
-      return "danger";
-    default:
-      return "warning";
   }
 };
 
@@ -704,19 +489,8 @@ const saveConversation = async () => {
     userTask: t.userTask,
     reasoning: t.reasoning,
     output: t.output,
-    agentResponse: t.agentResponse ? {
-      plan: t.agentResponse.plan,
-      changes: t.agentResponse.changes.map(c => ({
-        type: c.type,
-        position: c.position,
-        oldText: c.oldText,
-        content: c.content,
-      })),
-      explanation: t.agentResponse.explanation,
-    } : undefined,
     status: t.status,
     timestamp: t.timestamp,
-    mode: t.mode,
   })));
 
   try {
@@ -742,7 +516,6 @@ const sendMessage = async () => {
   const userInput = inputText.value.trim();
   inputText.value = "";
 
-  const isAgentMode = mode.value === "agent" && config.value.docContextEnabled;
   // 判断是否需要在 AI 回复后生成标题：新对话且是第一条消息
   const isNewConversation = !currentConversationId.value;
 
@@ -769,7 +542,6 @@ const sendMessage = async () => {
     output: "",
     status: "processing",
     timestamp: Date.now(),
-    mode: mode.value,
   };
 
   tasks.value.push(task);
@@ -797,78 +569,31 @@ const sendMessage = async () => {
     // 添加当前消息
     messages.push({ role: "user", content: userInput });
 
-    if (isAgentMode) {
-      // Agent 模式使用流式请求，实时解析 JSON
-      let lastParsedChangesCount = 0;
-
-      await AIApi.chatStream(config.value, messages, {
-        agentMode: true,
-        docTitle: props.docTitle,
-        docContent: props.docContent,
-        signal: abortController.value.signal,
-        onReasoning: (chunk) => {
-          task.reasoning += chunk;
-          triggerRef(tasks);
-          scrollToBottom();
-        },
-        onContent: (chunk) => {
-          task.output += chunk;
-
-          // 尝试增量解析 JSON，提取已完成的 changes
-          tryParseAgentResponse(task, lastParsedChangesCount, (newCount) => {
-            lastParsedChangesCount = newCount;
-          });
-
-          triggerRef(tasks);
-          scrollToBottom();
-        },
-        onDone: () => {
-          // 最终解析完整 JSON
-          try {
-            const parsed = JSON.parse(task.output);
-            if (parsed.plan || parsed.changes) {
-              task.agentResponse = parsed as AgentResponse;
-            }
-          } catch {
-            // 不是有效的 JSON，作为普通输出处理
-          }
-          task.status = "completed";
-          triggerRef(tasks);
-        },
-        onError: (err) => {
-          task.status = "error";
-          task.output = err.message || "请求失败";
-          triggerRef(tasks);
-        },
-      });
-    } else {
-      // Chat 模式使用流式请求
-      await AIApi.chatStream(config.value, messages, {
-        agentMode: false,
-        docTitle: config.value.docContextEnabled ? props.docTitle : undefined,
-        docContent: config.value.docContextEnabled ? props.docContent : undefined,
-        signal: abortController.value.signal,
-        onReasoning: (chunk) => {
-          task.reasoning += chunk;
-          triggerRef(tasks);
-          scrollToBottom();
-        },
-        onContent: (chunk) => {
-          task.output += chunk;
-          triggerRef(tasks);
-          scrollToBottom();
-        },
-        onDone: () => {
-          task.status = "completed";
-          triggerRef(tasks);
-        },
-        onError: (err) => {
-          task.status = "error";
-          task.output = err.message || "请求失败";
-          triggerRef(tasks);
-        },
-      });
-    }
+    // 使用流式请求
+    await AIApi.chatStream(config.value, messages, {
+      docTitle: config.value.docContextEnabled ? props.docTitle : undefined,
+      docContent: config.value.docContextEnabled ? props.docContent : undefined,
+      signal: abortController.value.signal,
+      onReasoning: (chunk) => {
+        task.reasoning += chunk;
+        triggerRef(tasks);
+        scrollToBottom();
+      },
+      onContent: (chunk) => {
+        task.output += chunk;
+        triggerRef(tasks);
+        scrollToBottom();
+      },
+      onDone: () => {
+        task.status = "completed";
+        triggerRef(tasks);
+      },
+      onError: (err) => {
+        task.status = "error";
+        task.output = err.message || "请求失败";
+        triggerRef(tasks);
+      },
+    });
   } catch (err: any) {
     task.status = "error";
     task.output = err.message || "请求失败";
@@ -974,21 +699,8 @@ const exportHistory = () => {
       userTask: task.userTask,
       reasoning: task.reasoning,
       output: task.output,
-      agentResponse: task.agentResponse
-        ? {
-            plan: task.agentResponse.plan,
-            changes: task.agentResponse.changes.map((c) => ({
-              type: c.type,
-              position: c.position,
-              oldText: c.oldText,
-              content: c.content,
-            })),
-            explanation: task.agentResponse.explanation,
-          }
-        : undefined,
       status: task.status,
       timestamp: task.timestamp,
-      mode: task.mode,
     })),
   };
 
@@ -1018,28 +730,6 @@ const deleteTask = async (index: number) => {
     await saveConversation();
     ElMessage.success("已删除该对话");
   }
-};
-
-// 应用变更
-const applyChange = (change: AgentChange, index: number) => {
-  emit("applyChange", change, (success, undoData) => {
-    if (success && undoData) {
-      change.applied = true;
-      change.undoData = undoData;
-      triggerRef(tasks);
-    }
-  });
-};
-
-// 撤回变更
-const undoChange = (change: AgentChange, index: number) => {
-  emit("undoChange", change, (success) => {
-    if (success) {
-      change.applied = false;
-      change.undoData = undefined;
-      triggerRef(tasks);
-    }
-  });
 };
 
 // 拖拽调整大小
@@ -1330,118 +1020,6 @@ const stopResize = () => {
       50% {
         opacity: 0;
       }
-    }
-
-    .raw-output-toggle {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 0;
-      cursor: pointer;
-      user-select: none;
-      font-size: 12px;
-      color: #909399;
-
-      &:hover {
-        color: #606266;
-      }
-
-      .el-icon {
-        transition: transform 0.2s;
-
-        &.is-expanded {
-          transform: rotate(90deg);
-        }
-      }
-    }
-
-    .raw-output-content {
-      background: #f5f7fa;
-      border-radius: 4px;
-      padding: 12px;
-      margin-top: 8px;
-
-      pre {
-        margin: 0;
-        font-size: 12px;
-        color: #606266;
-        line-height: 1.5;
-        white-space: pre-wrap;
-        word-break: break-word;
-        font-family: monospace;
-      }
-    }
-  }
-}
-
-.agent-changes {
-  .change-item {
-    background: #fafafa;
-    border: 1px solid #ebeef5;
-    border-radius: 6px;
-    padding: 12px;
-    margin-bottom: 10px;
-
-    .change-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-
-      .change-position {
-        font-size: 13px;
-        color: #606266;
-      }
-
-      .applied-tag {
-        margin-left: auto;
-      }
-    }
-
-    .change-content {
-      margin-bottom: 10px;
-
-      pre {
-        background: #fff;
-        border: 1px solid #e4e7ed;
-        padding: 10px;
-        border-radius: 4px;
-        font-size: 13px;
-        margin: 0;
-        white-space: pre-wrap;
-        word-break: break-all;
-      }
-    }
-  }
-}
-
-.agent-loading {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px;
-  background: #f0f9ff;
-  border: 1px solid #bae0ff;
-  border-radius: 6px;
-  margin-bottom: 12px;
-
-  .loading-spinner {
-    width: 20px;
-    height: 20px;
-    border: 2px solid #91caff;
-    border-top-color: #1677ff;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-
-  .loading-text {
-    font-size: 13px;
-    color: #1677ff;
-  }
-
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
     }
   }
 }

@@ -93,7 +93,6 @@ CREATE TABLE IF NOT EXISTS t_ai_config
 	model text NOT NULL DEFAULT '',
 	system_prompts text NOT NULL DEFAULT '[]',
 	current_prompt_id varchar(50) NOT NULL DEFAULT '',
-	agent_enabled boolean NOT NULL DEFAULT false,
 	doc_context_enabled boolean NOT NULL DEFAULT false,
 	panel_enabled boolean NOT NULL DEFAULT false,
 	create_time bigint NOT NULL,

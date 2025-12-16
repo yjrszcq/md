@@ -9,7 +9,6 @@ type AIConfig struct {
 	Model             string `json:"model" db:"model"`
 	SystemPrompts     string `json:"systemPrompts" db:"system_prompts"` // JSON数组
 	CurrentPromptId   string `json:"currentPromptId" db:"current_prompt_id"`
-	AgentEnabled      bool   `json:"agentEnabled" db:"agent_enabled"`
 	DocContextEnabled bool   `json:"docContextEnabled" db:"doc_context_enabled"`
 	PanelEnabled      bool   `json:"panelEnabled" db:"panel_enabled"`
 	CreateTime        int64  `json:"createTime" db:"create_time"`
@@ -31,7 +30,6 @@ type AIConfigCondition struct {
 	Model             string         `json:"model"`
 	SystemPrompts     []SystemPrompt `json:"systemPrompts"`
 	CurrentPromptId   string         `json:"currentPromptId"`
-	AgentEnabled      bool           `json:"agentEnabled"`
 	DocContextEnabled bool           `json:"docContextEnabled"`
 	PanelEnabled      bool           `json:"panelEnabled"`
 }

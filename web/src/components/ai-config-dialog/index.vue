@@ -76,7 +76,7 @@
           </el-form-item>
           <el-form-item label="允许读取当前文档">
             <el-switch v-model="form.docContextEnabled" />
-            <span class="form-tip">开启后 AI 可以访问当前编辑的文档内容，并支持 Agent 模式</span>
+            <span class="form-tip">开启后 AI 可以访问当前编辑的文档内容</span>
           </el-form-item>
         </el-form>
       </el-tab-pane>
@@ -189,7 +189,6 @@ const form = ref<AIConfig>({
   model: "",
   systemPrompts: [],
   currentPromptId: "",
-  agentEnabled: false,
   docContextEnabled: false,
   panelEnabled: false,
 });

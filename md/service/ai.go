@@ -37,7 +37,6 @@ func AIConfigGet(userId string) entity.AIConfigCondition {
 		Model:             config.Model,
 		SystemPrompts:     prompts,
 		CurrentPromptId:   config.CurrentPromptId,
-		AgentEnabled:      config.AgentEnabled,
 		DocContextEnabled: config.DocContextEnabled,
 		PanelEnabled:      config.PanelEnabled,
 	}
@@ -80,7 +79,6 @@ func AIConfigSave(userId string, condition entity.AIConfigCondition) {
 		Model:             condition.Model,
 		SystemPrompts:     string(promptsJson),
 		CurrentPromptId:   condition.CurrentPromptId,
-		AgentEnabled:      condition.AgentEnabled,
 		DocContextEnabled: condition.DocContextEnabled,
 		PanelEnabled:      condition.PanelEnabled,
 		UpdateTime:        time.Now().UnixMilli(),
@@ -161,7 +159,6 @@ func AIConfigGetFull(userId string) entity.AIConfigCondition {
 		Model:             config.Model,
 		SystemPrompts:     prompts,
 		CurrentPromptId:   config.CurrentPromptId,
-		AgentEnabled:      config.AgentEnabled,
 		DocContextEnabled: config.DocContextEnabled,
 		PanelEnabled:      config.PanelEnabled,
 	}

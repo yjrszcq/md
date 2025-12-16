@@ -37,7 +37,6 @@ const defaultConfig: AIConfig = {
   model: "",
   systemPrompts: [],
   currentPromptId: "",
-  agentEnabled: false,
   docContextEnabled: false,
   panelEnabled: false,
 };

@@ -9,14 +9,14 @@ import (
 
 // 添加AI配置
 func AIConfigAdd(tx *sqlx.Tx, config entity.AIConfig) error {
-	sql := `insert into t_ai_config (id,user_id,base_url,api_key,model,system_prompts,current_prompt_id,agent_enabled,doc_context_enabled,panel_enabled,create_time,update_time) values (:id,:user_id,:base_url,:api_key,:model,:system_prompts,:current_prompt_id,:agent_enabled,:doc_context_enabled,:panel_enabled,:create_time,:update_time)`
+	sql := `insert into t_ai_config (id,user_id,base_url,api_key,model,system_prompts,current_prompt_id,doc_context_enabled,panel_enabled,create_time,update_time) values (:id,:user_id,:base_url,:api_key,:model,:system_prompts,:current_prompt_id,:doc_context_enabled,:panel_enabled,:create_time,:update_time)`
 	_, err := tx.NamedExec(sql, config)
 	return err
 }
 
 // 更新AI配置
 func AIConfigUpdate(tx *sqlx.Tx, config entity.AIConfig) error {
-	sql := `update t_ai_config set base_url=:base_url,api_key=:api_key,model=:model,system_prompts=:system_prompts,current_prompt_id=:current_prompt_id,agent_enabled=:agent_enabled,doc_context_enabled=:doc_context_enabled,panel_enabled=:panel_enabled,update_time=:update_time where user_id=:user_id`
+	sql := `update t_ai_config set base_url=:base_url,api_key=:api_key,model=:model,system_prompts=:system_prompts,current_prompt_id=:current_prompt_id,doc_context_enabled=:doc_context_enabled,panel_enabled=:panel_enabled,update_time=:update_time where user_id=:user_id`
 	_, err := tx.NamedExec(sql, config)
 	return err
 }
