@@ -59,11 +59,13 @@
       </div>
       <!-- 对话选择下拉列表 -->
       <el-select
+        ref="conversationSelectRef"
         v-model="currentConversationId"
         size="small"
         placeholder="选择对话"
         class="conversation-select"
         @change="handleConversationChange"
+        @visible-change="handleSelectVisibleChange"
         :disabled="sending"
       >
         <el-option label="+ 新建对话" value="" />
@@ -243,8 +245,10 @@ const currentConversationId = ref<string>("");
 const searchExpanded = ref(false);
 const searchKeyword = ref("");
 const searchInputRef = ref<HTMLInputElement | null>(null);
+const conversationSelectRef = ref<InstanceType<typeof import("element-plus").ElSelect> | null>(null);
 const isFirstAiResponse = ref(false);
 const searchDebounceTimer = ref<ReturnType<typeof setTimeout> | null>(null);
+const savedConversationId = ref<string>(""); // 保存搜索前的对话ID
 
 const config = ref<AIConfig>({
   baseUrl: "",
@@ -319,11 +323,16 @@ const loadConversation = async (id: string) => {
 
 // 处理对话切换
 const handleConversationChange = async (id: string) => {
-  await loadConversation(id);
-  // 如果是从搜索结果中选择的，收起搜索栏并刷新列表
-  if (searchExpanded.value) {
+  // 如果是从搜索结果中选择的，先关闭搜索模式（防止 visible-change 重新打开下拉列表）
+  const wasSearching = searchExpanded.value;
+  if (wasSearching) {
     searchExpanded.value = false;
     searchKeyword.value = "";
+  }
+
+  await loadConversation(id);
+
+  if (wasSearching) {
     await loadConversations();
   }
   scrollToBottom();
@@ -332,14 +341,24 @@ const handleConversationChange = async (id: string) => {
 // 搜索相关
 const expandSearch = () => {
   searchExpanded.value = true;
+  // 保存当前对话ID，用于取消搜索时恢复
+  savedConversationId.value = currentConversationId.value;
   nextTick(() => {
-    searchInputRef.value?.focus();
+    // 先展开下拉列表，再聚焦搜索框
+    (conversationSelectRef.value as any)?.toggleMenu?.();
+    setTimeout(() => {
+      searchInputRef.value?.focus();
+    }, 50);
   });
 };
 
 const collapseSearch = () => {
   searchExpanded.value = false;
   searchKeyword.value = "";
+  // 恢复到搜索前的对话
+  currentConversationId.value = savedConversationId.value;
+  // 关闭下拉列表
+  (conversationSelectRef.value as any)?.blur?.();
   loadConversations();
 };
 
@@ -367,6 +386,20 @@ const handleSearch = () => {
 
 const handleSearchClear = () => {
   loadConversations();
+};
+
+// 处理下拉列表显示/隐藏
+const handleSelectVisibleChange = (visible: boolean) => {
+  // 如果在搜索模式下，下拉列表被关闭（非选择导致），重新打开
+  if (!visible && searchExpanded.value) {
+    nextTick(() => {
+      (conversationSelectRef.value as any)?.toggleMenu?.();
+      // 保持搜索框焦点
+      setTimeout(() => {
+        searchInputRef.value?.focus();
+      }, 50);
+    });
+  }
 };
 
 // 监听 AI 配置变化事件
