@@ -58,11 +58,19 @@
           <el-button type="primary" size="small" @click="addPrompt">新增</el-button>
         </div>
         <div class="prompts-list" :class="{ disabled: !form.systemPromptEnabled }">
-          <div v-for="(prompt, index) in form.systemPrompts" :key="prompt.id" class="prompt-item" :class="{ active: form.currentPromptId === prompt.id }">
-            <el-radio v-model="form.currentPromptId" :value="prompt.id" @change="handlePromptSelect">
-              <span class="prompt-name">{{ prompt.name || "未命名提示词" }}</span>
-            </el-radio>
-            <div class="prompt-actions">
+          <div
+            v-for="(prompt, index) in form.systemPrompts"
+            :key="prompt.id"
+            class="prompt-item"
+            :class="{ active: form.currentPromptId === prompt.id }"
+            @click="selectPrompt(prompt.id)"
+          >
+            <div class="prompt-radio">
+              <el-radio v-model="form.currentPromptId" :value="prompt.id" @click.stop>
+                <span class="prompt-name">{{ prompt.name || "未命名提示词" }}</span>
+              </el-radio>
+            </div>
+            <div class="prompt-actions" @click.stop>
               <el-button text size="small" @click="editPrompt(index)">编辑</el-button>
               <el-button text size="small" type="danger" @click="deletePrompt(index)">删除</el-button>
             </div>
@@ -336,8 +344,8 @@ const deletePrompt = (index: number) => {
 };
 
 // 选择提示词
-const handlePromptSelect = () => {
-  // 已通过 v-model 处理
+const selectPrompt = (promptId: string) => {
+  form.value.currentPromptId = promptId;
 };
 
 // 处理同步开关变化
@@ -580,6 +588,7 @@ const handleClose = () => {
   border-radius: 4px;
   margin-bottom: 8px;
   transition: all 0.2s;
+  cursor: pointer;
 
   &:hover {
     border-color: #c0c4cc;
@@ -590,6 +599,11 @@ const handleClose = () => {
     background-color: #ecf5ff;
   }
 
+  .prompt-radio {
+    flex: 1;
+    min-width: 0;
+  }
+
   .prompt-name {
     margin-left: 8px;
   }
@@ -597,6 +611,7 @@ const handleClose = () => {
   .prompt-actions {
     display: flex;
     gap: 4px;
+    flex-shrink: 0;
   }
 }
 
