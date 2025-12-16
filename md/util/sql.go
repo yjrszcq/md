@@ -1,4 +1,4 @@
-// sql语句拼接工具类
+// SQL query builder utility
 package util
 
 import (
@@ -6,6 +6,9 @@ import (
 	"strconv"
 	"strings"
 )
+
+// Pre-compiled regex for count query generation
+var selectFromRegex = regexp.MustCompile(`(?i)(?s)select(.*?)from`)
 
 type SqlCompletion struct {
 	initSql      string
@@ -20,11 +23,12 @@ type SqlCompletion struct {
 	limitParams  []interface{}
 }
 
-// 设置初始sql语句
+// InitSql sets the base SQL query and auto-generates count query.
+// Note: auto-generation may fail for complex queries with subqueries.
+// Use InitSqlAndCount for complex cases.
 func (s *SqlCompletion) InitSql(sql string) *SqlCompletion {
 	s.initSql = sql
-	r, _ := regexp.Compile("(?i)(?s)select(.*?)from")
-	s.initCountSql = r.ReplaceAllString(sql, "select count(*) as count from")
+	s.initCountSql = selectFromRegex.ReplaceAllString(sql, "select count(*) as count from")
 	return s
 }
 

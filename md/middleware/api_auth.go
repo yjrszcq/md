@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"unicode/utf8"
 
 	"github.com/kataras/iris/v12"
 	"github.com/muesli/cache2go"
@@ -55,12 +54,12 @@ func CurrentUserId(ctx iris.Context) string {
 	return tokenCache.Id
 }
 
-// 解析头信息中的认证信息
+// Extract auth token from Authorization header
 func resolveHeader(ctx iris.Context, prefix string) string {
 	header := ctx.GetHeader("Authorization")
-	prefixLen := utf8.RuneCountInString(prefix) + 1
-	if header != "" && strings.Index(header, prefix) == 0 && utf8.RuneCountInString(header) > prefixLen {
-		return string([]rune(header)[prefixLen:])
+	expectedPrefix := prefix + " "
+	if strings.HasPrefix(header, expectedPrefix) && len(header) > len(expectedPrefix) {
+		return header[len(expectedPrefix):]
 	}
 	panic(common.NewErrorCode(common.HttpAuthFailure, "认证失败"))
 }

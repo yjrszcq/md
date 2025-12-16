@@ -260,24 +260,29 @@ func pkcs7UnPadding(message []byte) ([]byte, error) {
 	return message[:(length - unPadding)], nil
 }
 
-// 将key向上填充为16位、24位、32位，超过32位则截取前32位
+// Pad key to valid AES key length (16, 24, or 32 bytes).
+// Truncates if longer than 32 bytes.
 func paddingKey(key string) []byte {
 	keyByte := []byte(key)
-	keyLen := len(key)
-	if keyLen < 16 {
-		for i := 0; i < 16-keyLen; i++ {
-			keyByte = append(keyByte, 0)
-		}
-	} else if keyLen < 24 {
-		for i := 0; i < 24-keyLen; i++ {
-			keyByte = append(keyByte, 0)
-		}
-	} else if keyLen < 32 {
-		for i := 0; i < 32-keyLen; i++ {
-			keyByte = append(keyByte, 0)
-		}
-	} else if keyLen > 32 {
-		keyByte = keyByte[:32]
+	keyLen := len(keyByte)
+
+	// Find target length
+	targetLen := 16
+	if keyLen > 16 {
+		targetLen = 24
+	}
+	if keyLen > 24 {
+		targetLen = 32
+	}
+
+	// Truncate or pad
+	if keyLen > 32 {
+		return keyByte[:32]
+	}
+	if keyLen < targetLen {
+		padded := make([]byte, targetLen)
+		copy(padded, keyByte)
+		return padded
 	}
 	return keyByte
 }
