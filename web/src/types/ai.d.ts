@@ -114,6 +114,7 @@ interface TaskBlock {
   agentResponse?: AgentResponse;
   status: "pending" | "processing" | "completed" | "error";
   timestamp: number;
+  mode?: "chat" | "agent";
 }
 
 // 配置导出格式

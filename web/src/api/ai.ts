@@ -162,9 +162,10 @@ class AIApi {
       agentMode?: boolean;
       docTitle?: string;
       docContent?: string;
+      signal?: AbortSignal;
     }
   ): Promise<ChatResponse> {
-    const { agentMode, docTitle, docContent } = options || {};
+    const { agentMode, docTitle, docContent, signal } = options || {};
 
     // 构建完整的消息列表
     const fullMessages: ChatMessage[] = [];

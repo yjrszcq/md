@@ -58,13 +58,19 @@
           </div>
         </div>
 
-        <!-- AI 输出（流式显示） -->
-        <div class="ai-output" v-if="task.output || task.status === 'processing'">
+        <!-- AI 输出（Chat模式流式显示，Agent模式仅显示说明） -->
+        <div class="ai-output" v-if="task.output || (task.status === 'processing' && task.mode !== 'agent')">
           <div class="task-label">Output</div>
           <div class="output-content">
-            <MdPreview v-if="task.output" :modelValue="getMarkdownContent(task.output)" previewTheme="cyanosis" />
+            <MdPreview v-if="task.output" :modelValue="getMarkdownContent(task)" previewTheme="cyanosis" />
             <span v-else-if="task.status === 'processing'" class="cursor-blink">▋</span>
           </div>
+        </div>
+
+        <!-- Agent 模式加载状态 -->
+        <div v-if="task.status === 'processing' && task.mode === 'agent'" class="agent-loading">
+          <div class="loading-spinner"></div>
+          <span class="loading-text">AI 正在分析文档并生成修改建议...</span>
         </div>
 
         <!-- Agent 变更建议 -->
@@ -275,18 +281,87 @@ const handleModeChange = (newMode: "chat" | "agent") => {
 };
 
 // 渲染 Markdown - 提取需要渲染的内容
-const getMarkdownContent = (content: string) => {
-  try {
-    // 尝试解析为 Agent JSON 格式
-    if (mode.value === "agent" && content.startsWith("{")) {
-      const parsed = JSON.parse(content);
-      if (parsed.explanation) {
-        return parsed.explanation;
-      }
+const getMarkdownContent = (task: TaskBlock) => {
+  // Agent 模式显示 explanation
+  if (task.mode === "agent" && task.agentResponse?.explanation) {
+    return task.agentResponse.explanation;
+  }
+  return task.output;
+};
+
+// 尝试增量解析 Agent 响应的 JSON
+const tryParseAgentResponse = (
+  task: TaskBlock,
+  lastParsedChangesCount: number,
+  onNewChanges: (newCount: number) => void
+) => {
+  const content = task.output;
+
+  // 尝试提取 changes 数组中已完成的对象
+  const changesMatch = content.match(/"changes"\s*:\s*\[/);
+  if (!changesMatch) return;
+
+  const changesStartIndex = changesMatch.index! + changesMatch[0].length;
+  const changesContent = content.slice(changesStartIndex);
+
+  // 逐个解析 change 对象
+  const changes: AgentChange[] = [];
+  let depth = 0;
+  let objectStart = -1;
+  let inString = false;
+  let escapeNext = false;
+
+  for (let i = 0; i < changesContent.length; i++) {
+    const char = changesContent[i];
+
+    if (escapeNext) {
+      escapeNext = false;
+      continue;
     }
-    return content;
-  } catch {
-    return content;
+
+    if (char === "\\") {
+      escapeNext = true;
+      continue;
+    }
+
+    if (char === '"' && !escapeNext) {
+      inString = !inString;
+      continue;
+    }
+
+    if (inString) continue;
+
+    if (char === "{") {
+      if (depth === 0) {
+        objectStart = i;
+      }
+      depth++;
+    } else if (char === "}") {
+      depth--;
+      if (depth === 0 && objectStart !== -1) {
+        // 找到一个完整的对象
+        const objectStr = changesContent.slice(objectStart, i + 1);
+        try {
+          const change = JSON.parse(objectStr) as AgentChange;
+          changes.push(change);
+        } catch {
+          // 解析失败，忽略
+        }
+        objectStart = -1;
+      }
+    } else if (char === "]" && depth === 0) {
+      // changes 数组结束
+      break;
+    }
+  }
+
+  // 如果解析到新的 changes，更新 task
+  if (changes.length > lastParsedChangesCount) {
+    if (!task.agentResponse) {
+      task.agentResponse = { plan: [], changes: [], explanation: "" };
+    }
+    task.agentResponse.changes = changes;
+    onNewChanges(changes.length);
   }
 };
 
@@ -339,6 +414,8 @@ const sendMessage = async () => {
   const userInput = inputText.value.trim();
   inputText.value = "";
 
+  const isAgentMode = mode.value === "agent" && config.value.docContextEnabled;
+
   const task: TaskBlock = {
     id: Date.now().toString(),
     userTask: userInput,
@@ -346,6 +423,7 @@ const sendMessage = async () => {
     output: "",
     status: "processing",
     timestamp: Date.now(),
+    mode: mode.value,
   };
 
   tasks.value.push(task);
@@ -371,25 +449,33 @@ const sendMessage = async () => {
     // 添加当前消息
     messages.push({ role: "user", content: userInput });
 
-    // 流式调用 AI API
-    await AIApi.chatStream(config.value, messages, {
-      agentMode: mode.value === "agent" && config.value.docContextEnabled,
-      docTitle: config.value.docContextEnabled ? props.docTitle : undefined,
-      docContent: config.value.docContextEnabled ? props.docContent : undefined,
-      signal: abortController.value.signal,
-      onReasoning: (chunk) => {
-        task.reasoning += chunk;
-        triggerRef(tasks); // 强制触发视图更新
-        scrollToBottom();
-      },
-      onContent: (chunk) => {
-        task.output += chunk;
-        triggerRef(tasks); // 强制触发视图更新
-        scrollToBottom();
-      },
-      onDone: () => {
-        // 如果是 Agent 模式，尝试解析结构化响应
-        if (mode.value === "agent" && config.value.docContextEnabled) {
+    if (isAgentMode) {
+      // Agent 模式使用流式请求，实时解析 JSON
+      let lastParsedChangesCount = 0;
+
+      await AIApi.chatStream(config.value, messages, {
+        agentMode: true,
+        docTitle: props.docTitle,
+        docContent: props.docContent,
+        signal: abortController.value.signal,
+        onReasoning: (chunk) => {
+          task.reasoning += chunk;
+          triggerRef(tasks);
+          scrollToBottom();
+        },
+        onContent: (chunk) => {
+          task.output += chunk;
+
+          // 尝试增量解析 JSON，提取已完成的 changes
+          tryParseAgentResponse(task, lastParsedChangesCount, (newCount) => {
+            lastParsedChangesCount = newCount;
+          });
+
+          triggerRef(tasks);
+          scrollToBottom();
+        },
+        onDone: () => {
+          // 最终解析完整 JSON
           try {
             const parsed = JSON.parse(task.output);
             if (parsed.plan || parsed.changes) {
@@ -398,16 +484,43 @@ const sendMessage = async () => {
           } catch {
             // 不是有效的 JSON，作为普通输出处理
           }
-        }
-        task.status = "completed";
-        triggerRef(tasks);
-      },
-      onError: (err) => {
-        task.status = "error";
-        task.output = err.message || "请求失败";
-        triggerRef(tasks);
-      },
-    });
+          task.status = "completed";
+          triggerRef(tasks);
+        },
+        onError: (err) => {
+          task.status = "error";
+          task.output = err.message || "请求失败";
+          triggerRef(tasks);
+        },
+      });
+    } else {
+      // Chat 模式使用流式请求
+      await AIApi.chatStream(config.value, messages, {
+        agentMode: false,
+        docTitle: config.value.docContextEnabled ? props.docTitle : undefined,
+        docContent: config.value.docContextEnabled ? props.docContent : undefined,
+        signal: abortController.value.signal,
+        onReasoning: (chunk) => {
+          task.reasoning += chunk;
+          triggerRef(tasks);
+          scrollToBottom();
+        },
+        onContent: (chunk) => {
+          task.output += chunk;
+          triggerRef(tasks);
+          scrollToBottom();
+        },
+        onDone: () => {
+          task.status = "completed";
+          triggerRef(tasks);
+        },
+        onError: (err) => {
+          task.status = "error";
+          task.output = err.message || "请求失败";
+          triggerRef(tasks);
+        },
+      });
+    }
   } catch (err: any) {
     task.status = "error";
     task.output = err.message || "请求失败";
@@ -776,6 +889,37 @@ const stopResize = () => {
         white-space: pre-wrap;
         word-break: break-all;
       }
+    }
+  }
+}
+
+.agent-loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: #f0f9ff;
+  border: 1px solid #bae0ff;
+  border-radius: 6px;
+  margin-bottom: 12px;
+
+  .loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #91caff;
+    border-top-color: #1677ff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  .loading-text {
+    font-size: 13px;
+    color: #1677ff;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
     }
   }
 }
