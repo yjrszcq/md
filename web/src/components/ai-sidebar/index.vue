@@ -647,6 +647,9 @@ const generateTitle = async (userMessage: string, aiResponse: string): Promise<s
 
 // 保存对话
 const saveConversation = async () => {
+  // 如果没有对话ID，则不保存（新对话已在 sendMessage 中创建）
+  if (!currentConversationId.value) return;
+
   const contentJson = JSON.stringify(tasks.value.map(t => ({
     id: t.id,
     userTask: t.userTask,
@@ -668,22 +671,10 @@ const saveConversation = async () => {
   })));
 
   try {
-    if (currentConversationId.value) {
-      // 更新现有对话
-      await AIApi.updateConversation({
-        id: currentConversationId.value,
-        content: contentJson,
-      });
-    } else if (tasks.value.length > 0) {
-      // 创建新对话
-      const res = await AIApi.addConversation({
-        title: "新对话",
-        content: contentJson,
-      });
-      currentConversationId.value = res.data.id;
-      isFirstAiResponse.value = false;
-      await loadConversations();
-    }
+    await AIApi.updateConversation({
+      id: currentConversationId.value,
+      content: contentJson,
+    });
   } catch (err) {
     console.error("保存对话失败", err);
   }
@@ -705,6 +696,22 @@ const sendMessage = async () => {
   const isAgentMode = mode.value === "agent" && config.value.docContextEnabled;
   // 判断是否需要在 AI 回复后生成标题：新对话且是第一条消息
   const isNewConversation = !currentConversationId.value;
+
+  // 如果是新对话，先创建对话记录
+  if (isNewConversation) {
+    try {
+      const res = await AIApi.addConversation({
+        title: "新对话",
+        content: "[]",
+      });
+      currentConversationId.value = res.data.id;
+      await loadConversations();
+    } catch (err) {
+      console.error("创建对话失败", err);
+      ElMessage.error("创建对话失败");
+      return;
+    }
+  }
 
   const task: TaskBlock = {
     id: Date.now().toString(),
