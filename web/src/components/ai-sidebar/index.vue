@@ -244,6 +244,7 @@ const searchExpanded = ref(false);
 const searchKeyword = ref("");
 const searchInputRef = ref<HTMLInputElement | null>(null);
 const isFirstAiResponse = ref(false);
+const searchDebounceTimer = ref<ReturnType<typeof setTimeout> | null>(null);
 
 const config = ref<AIConfig>({
   baseUrl: "",
@@ -319,6 +320,12 @@ const loadConversation = async (id: string) => {
 // 处理对话切换
 const handleConversationChange = async (id: string) => {
   await loadConversation(id);
+  // 如果是从搜索结果中选择的，收起搜索栏并刷新列表
+  if (searchExpanded.value) {
+    searchExpanded.value = false;
+    searchKeyword.value = "";
+    await loadConversations();
+  }
   scrollToBottom();
 };
 
@@ -336,18 +343,26 @@ const collapseSearch = () => {
   loadConversations();
 };
 
-const handleSearch = async () => {
-  if (!searchKeyword.value) {
-    await loadConversations();
-    return;
+const handleSearch = () => {
+  // 清除之前的定时器
+  if (searchDebounceTimer.value) {
+    clearTimeout(searchDebounceTimer.value);
   }
 
-  try {
-    const res = await AIApi.searchConversations(searchKeyword.value);
-    conversations.value = res.data;
-  } catch (err) {
-    console.error("搜索失败", err);
-  }
+  // 设置防抖延迟
+  searchDebounceTimer.value = setTimeout(async () => {
+    if (!searchKeyword.value) {
+      await loadConversations();
+      return;
+    }
+
+    try {
+      const res = await AIApi.searchConversations(searchKeyword.value);
+      conversations.value = res.data;
+    } catch (err) {
+      console.error("搜索失败", err);
+    }
+  }, 300);
 };
 
 const handleSearchClear = () => {
@@ -1029,35 +1044,6 @@ const stopResize = () => {
     flex: 1;
     min-width: 0;
   }
-
-  .conversation-option {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-
-    .conv-title {
-      flex: 1;
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      margin-right: 12px;
-    }
-
-    .conv-time {
-      font-size: 11px;
-      color: #909399;
-      flex-shrink: 0;
-      text-align: right;
-    }
-
-    &.is-current {
-      .conv-time {
-        font-weight: 600;
-      }
-    }
-  }
 }
 
 .task-blocks {
@@ -1311,6 +1297,38 @@ const stopResize = () => {
     .input-tip {
       font-size: 12px;
       color: #909399;
+    }
+  }
+}
+</style>
+
+<!-- 全局样式，用于下拉弹出层（弹出层挂载在body上，scoped样式无法影响） -->
+<style lang="scss">
+.conversation-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+
+  .conv-title {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-right: 12px;
+  }
+
+  .conv-time {
+    font-size: 11px;
+    color: #909399;
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  &.is-current {
+    .conv-time {
+      font-weight: 600;
     }
   }
 }
