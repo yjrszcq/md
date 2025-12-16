@@ -6,11 +6,10 @@
     <!-- 顶部工具栏 -->
     <div class="sidebar-header">
       <div class="header-left">
-        <span class="sidebar-title">AI 对话</span>
-      </div>
-      <div class="header-right">
         <span class="model-name" :title="config.model">{{ config.model || "未配置模型" }}</span>
         <span class="status-dot" :class="statusClass"></span>
+      </div>
+      <div class="header-right">
         <div class="header-actions">
           <el-button text size="small" @click="exportHistory" title="导出对话" :disabled="tasks.length === 0 || !currentConversationId">
             <el-icon><Download /></el-icon>
@@ -824,17 +823,13 @@ const stopResize = () => {
   .header-left {
     display: flex;
     align-items: center;
-  }
-
-  .header-right {
-    display: flex;
-    align-items: center;
     gap: 8px;
 
     .model-name {
-      font-size: 12px;
-      color: #606266;
-      max-width: 100px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #303133;
+      max-width: 180px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -844,6 +839,7 @@ const stopResize = () => {
       width: 8px;
       height: 8px;
       border-radius: 50%;
+      flex-shrink: 0;
 
       &.status-ok {
         background: #67c23a;
@@ -855,11 +851,15 @@ const stopResize = () => {
         background: #f56c6c;
       }
     }
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
 
     .header-actions {
       display: flex;
       align-items: center;
-      margin-left: 4px;
 
       :deep(.el-button) {
         padding: 4px;
