@@ -267,27 +267,25 @@ const scrollToAndSelect = (startIndex: number, endIndex: number) => {
 
     const beforeText = content.slice(0, safeStart);
     const totalLines = content.split('\n').length;
-    // Clamp startLine to actual line count (handles EOF insert undo)
     const startLine = Math.min(beforeText.split('\n').length, totalLines);
 
-    // Remove previous highlight style if exists
+    // Calculate line range
+    const isPoint = safeStart === safeEnd;
+    let endLine = startLine;
+    if (!isPoint) {
+      const changeText = content.slice(safeStart, safeEnd);
+      const lineCount = changeText.split('\n').length;
+      endLine = startLine + lineCount - 1;
+    }
+
+    // Remove previous highlight style
     if (highlightStyleEl) {
       highlightStyleEl.remove();
       highlightStyleEl = null;
     }
 
-    // Get editor lines
-    const editorEl = document.querySelector('.editor-view .cm-content') as HTMLElement;
-    if (!editorEl) return;
-    const lines = editorEl.querySelectorAll('.cm-line');
-
-    // Clear previous inline highlights
-    lines.forEach((line) => {
-      (line as HTMLElement).style.removeProperty('background-color');
-    });
-
-    if (safeStart === safeEnd) {
-      // Point indicator for insert undo / delete apply - use CSS for pseudo-element
+    // Create CSS style for point indicator
+    if (isPoint) {
       const style = document.createElement('style');
       style.textContent = `
         .editor-view .cm-content .cm-line.highlight-point::after {
@@ -301,50 +299,65 @@ const scrollToAndSelect = (startIndex: number, endIndex: number) => {
       `;
       document.head.appendChild(style);
       highlightStyleEl = style;
-      const targetLine = lines[startLine - 1] as HTMLElement;
-      if (targetLine) {
-        targetLine.classList.add('highlight-point');
-        setTimeout(() => targetLine.classList.remove('highlight-point'), 2500);
-      }
-    } else {
-      // Normal range highlight - apply directly to elements
-      const changeText = content.slice(safeStart, safeEnd);
-      const lineCount = changeText.split('\n').length;
-      const endLine = startLine + lineCount - 1;
+    }
 
-      for (let i = startLine; i <= endLine; i++) {
-        const line = lines[i - 1] as HTMLElement;
-        if (line) {
-          line.style.backgroundColor = '#fff3cd';
+    // Combined scroll and highlight function
+    const doScrollAndHighlight = () => {
+      const editorEl = document.querySelector('.editor-view .cm-content') as HTMLElement;
+      if (!editorEl) return;
+      const lines = editorEl.querySelectorAll('.cm-line');
+      const targetIndex = Math.min(startLine - 1, lines.length - 1);
+      const targetLine = lines[targetIndex] as HTMLElement;
+
+      if (targetLine) {
+        targetLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      // Apply highlight
+      if (isPoint) {
+        if (targetLine) {
+          targetLine.classList.add('highlight-point');
+        }
+      } else {
+        for (let i = startLine; i <= endLine; i++) {
+          const line = lines[i - 1] as HTMLElement;
+          if (line) {
+            line.style.backgroundColor = '#fff3cd';
+          }
         }
       }
+    };
 
-      // Remove highlight after delay
-      setTimeout(() => {
+    // Multiple attempts to handle async rendering
+    doScrollAndHighlight();
+    setTimeout(doScrollAndHighlight, 300);
+    setTimeout(doScrollAndHighlight, 600);
+
+    // Remove highlight after delay
+    setTimeout(() => {
+      const editorEl = document.querySelector('.editor-view .cm-content') as HTMLElement;
+      if (!editorEl) return;
+      const lines = editorEl.querySelectorAll('.cm-line');
+
+      if (isPoint) {
+        const targetLine = lines[Math.min(startLine - 1, lines.length - 1)] as HTMLElement;
+        if (targetLine) {
+          targetLine.classList.remove('highlight-point');
+        }
+      } else {
         for (let i = startLine; i <= endLine; i++) {
           const line = lines[i - 1] as HTMLElement;
           if (line) {
             line.style.removeProperty('background-color');
           }
         }
-      }, 2500);
-    }
-
-    // Scroll to target line
-    const doScroll = () => {
-      const freshEditorEl = document.querySelector('.editor-view .cm-content') as HTMLElement;
-      if (!freshEditorEl) return;
-      const freshLines = freshEditorEl.querySelectorAll('.cm-line');
-      const targetIndex = Math.min(startLine - 1, freshLines.length - 1);
-      const freshTarget = freshLines[targetIndex] as HTMLElement;
-      if (freshTarget) {
-        freshTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
-    };
 
-    doScroll();
-    setTimeout(doScroll, 300);
-    setTimeout(doScroll, 600);
+      if (highlightStyleEl) {
+        highlightStyleEl.remove();
+        highlightStyleEl = null;
+      }
+    }, 2500);
   }, 100);
 };
 
