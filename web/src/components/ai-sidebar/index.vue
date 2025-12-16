@@ -25,10 +25,22 @@
 
     <!-- 任务块区域 -->
     <div class="task-blocks" ref="taskBlocksRef">
-      <div v-for="task in tasks" :key="task.id" class="task-block">
+      <div v-for="(task, taskIndex) in tasks" :key="task.id" class="task-block">
         <!-- 用户任务 -->
         <div class="user-task">
-          <div class="task-label">Task</div>
+          <div class="task-label-row">
+            <div class="task-label">Task</div>
+            <el-button
+              v-if="task.status !== 'processing'"
+              text
+              size="small"
+              class="delete-task-btn"
+              @click="deleteTask(taskIndex)"
+              title="删除此对话"
+            >
+              <el-icon><Delete /></el-icon>
+            </el-button>
+          </div>
           <div class="task-content">{{ task.userTask }}</div>
         </div>
 
@@ -428,6 +440,19 @@ const clearHistory = async () => {
   ElMessage.success("会话已清空");
 };
 
+// 删除单条对话
+const deleteTask = async (index: number) => {
+  const task = tasks.value[index];
+  if (task) {
+    // 移除对应的推理展开状态
+    expandedReasonings.value.delete(task.id);
+    // 从数组中删除
+    tasks.value = tasks.value.filter((_, i) => i !== index);
+    await saveChatHistory();
+    ElMessage.success("已删除该对话");
+  }
+};
+
 // 保存聊天历史
 const saveChatHistory = async () => {
   // 只保留最近20条
@@ -586,6 +611,26 @@ const stopResize = () => {
 
 .user-task {
   margin-bottom: 12px;
+
+  .task-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+
+    .task-label {
+      margin-bottom: 0;
+    }
+
+    .delete-task-btn {
+      padding: 2px 4px;
+      color: #909399;
+
+      &:hover {
+        color: #f56c6c;
+      }
+    }
+  }
 
   .task-content {
     background: #f5f7fa;
