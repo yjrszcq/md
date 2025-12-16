@@ -122,12 +122,40 @@
         <div class="ai-output" v-if="task.output || (task.status === 'processing' && task.mode !== 'agent')">
           <div class="task-label">Output</div>
           <div class="output-content">
-            <MdPreview v-if="task.output" :modelValue="getMarkdownContent(task)" previewTheme="cyanosis" />
-            <span v-else-if="task.status === 'processing'" class="cursor-blink">▋</span>
+            <!-- Agent 模式的格式化输出：显示解析后的说明，原始 JSON 可折叠查看 -->
+            <template v-if="task.mode === 'agent' && task.agentResponse">
+              <MdPreview v-if="task.agentResponse.explanation" :modelValue="task.agentResponse.explanation" previewTheme="cyanosis" />
+              <div class="raw-output-toggle" @click="toggleRawOutput(task.id)">
+                <el-icon :class="{ 'is-expanded': expandedRawOutputs.has(task.id) }">
+                  <ArrowRight />
+                </el-icon>
+                <span>查看原始输出</span>
+              </div>
+              <div v-show="expandedRawOutputs.has(task.id)" class="raw-output-content">
+                <pre>{{ task.output }}</pre>
+              </div>
+            </template>
+            <!-- Agent 模式流式输出中：显示原始内容（可折叠） -->
+            <template v-else-if="task.mode === 'agent' && task.status === 'processing' && task.output">
+              <div class="raw-output-toggle" @click="toggleRawOutput(task.id)">
+                <el-icon :class="{ 'is-expanded': expandedRawOutputs.has(task.id) }">
+                  <ArrowRight />
+                </el-icon>
+                <span>查看流式输出</span>
+              </div>
+              <div v-show="expandedRawOutputs.has(task.id)" class="raw-output-content">
+                <pre>{{ task.output }}</pre>
+              </div>
+            </template>
+            <!-- Chat 模式或 Agent 模式无格式化内容：直接显示 -->
+            <template v-else>
+              <MdPreview v-if="task.output" :modelValue="getMarkdownContent(task)" previewTheme="cyanosis" />
+              <span v-else-if="task.status === 'processing'" class="cursor-blink">▋</span>
+            </template>
           </div>
         </div>
 
-        <!-- Agent 模式加载状态 -->
+        <!-- Agent 模式加载状态（放在输出下方） -->
         <div v-if="task.status === 'processing' && task.mode === 'agent'" class="agent-loading">
           <div class="loading-spinner"></div>
           <span class="loading-text">AI 正在分析文档并生成修改建议...</span>
@@ -237,6 +265,7 @@ const sidebarWidth = ref(380);
 const tasks = shallowRef<TaskBlock[]>([]);
 const taskBlocksRef = ref<HTMLElement | null>(null);
 const expandedReasonings = ref<Set<string>>(new Set());
+const expandedRawOutputs = ref<Set<string>>(new Set());
 const abortController = ref<AbortController | null>(null);
 
 // 对话记录相关
@@ -484,6 +513,15 @@ const toggleReasoning = (taskId: string) => {
   }
 };
 
+// 切换原始输出展开/收起
+const toggleRawOutput = (taskId: string) => {
+  if (expandedRawOutputs.value.has(taskId)) {
+    expandedRawOutputs.value.delete(taskId);
+  } else {
+    expandedRawOutputs.value.add(taskId);
+  }
+};
+
 // 处理模式切换
 const handleModeChange = (newMode: "chat" | "agent") => {
   if (newMode === "agent" && !config.value.docContextEnabled) {
@@ -725,7 +763,7 @@ const sendMessage = async () => {
 
   tasks.value.push(task);
   await nextTick();
-  scrollToBottom();
+  scrollToBottom(true); // Force scroll when user sends message
 
   sending.value = true;
   abortController.value = new AbortController();
@@ -842,10 +880,17 @@ const sendMessage = async () => {
   }
 };
 
-// 滚动到底部
-const scrollToBottom = () => {
+// Check if user is near bottom of scroll area
+const isNearBottom = () => {
+  if (!taskBlocksRef.value) return true;
+  const { scrollTop, scrollHeight, clientHeight } = taskBlocksRef.value;
+  return scrollHeight - scrollTop - clientHeight < 100;
+};
+
+// Scroll to bottom only if user is already near bottom
+const scrollToBottom = (force = false) => {
   nextTick(() => {
-    if (taskBlocksRef.value) {
+    if (taskBlocksRef.value && (force || isNearBottom())) {
       taskBlocksRef.value.scrollTop = taskBlocksRef.value.scrollHeight;
     }
   });
@@ -1248,6 +1293,46 @@ const stopResize = () => {
     @keyframes blink {
       50% {
         opacity: 0;
+      }
+    }
+
+    .raw-output-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 0;
+      cursor: pointer;
+      user-select: none;
+      font-size: 12px;
+      color: #909399;
+
+      &:hover {
+        color: #606266;
+      }
+
+      .el-icon {
+        transition: transform 0.2s;
+
+        &.is-expanded {
+          transform: rotate(90deg);
+        }
+      }
+    }
+
+    .raw-output-content {
+      background: #f5f7fa;
+      border-radius: 4px;
+      padding: 12px;
+      margin-top: 8px;
+
+      pre {
+        margin: 0;
+        font-size: 12px;
+        color: #606266;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: monospace;
       }
     }
   }
