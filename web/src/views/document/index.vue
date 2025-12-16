@@ -259,91 +259,78 @@ let highlightStyleEl: HTMLStyleElement | null = null;
 const scrollToAndSelect = (startIndex: number, endIndex: number) => {
   // Wait for editor to fully re-render after mdKey change
   setTimeout(() => {
-    nextTick(() => {
-      const content = currentDoc.value.content;
+    const content = currentDoc.value.content;
 
-      // Boundary check
-      const safeStart = Math.min(startIndex, content.length);
-      const safeEnd = Math.min(endIndex, content.length);
+    // Boundary check
+    const safeStart = Math.min(startIndex, content.length);
+    const safeEnd = Math.min(endIndex, content.length);
 
-      const beforeText = content.slice(0, safeStart);
-      const startLine = beforeText.split('\n').length;
+    const beforeText = content.slice(0, safeStart);
+    const startLine = beforeText.split('\n').length;
 
-      // Find CodeMirror content element
-      const editorEl = document.querySelector('.editor-view .cm-content') as HTMLElement;
-      if (!editorEl) return;
+    // Remove previous highlight style if exists
+    if (highlightStyleEl) {
+      highlightStyleEl.remove();
+      highlightStyleEl = null;
+    }
 
-      // Find target line element
-      const lines = editorEl.querySelectorAll('.cm-line');
-      const targetLine = lines[startLine - 1] as HTMLElement;
+    // Apply highlight style first (survives image re-renders)
+    const style = document.createElement('style');
+    if (safeStart === safeEnd) {
+      // Point indicator for insert undo / delete apply
+      style.textContent = `
+        .editor-view .cm-content .cm-line:nth-child(${startLine})::after {
+          content: '';
+          display: block;
+          height: 3px;
+          background: linear-gradient(90deg, #f0ad4e, #ec971f);
+          margin-top: 2px;
+          border-radius: 2px;
+        }
+      `;
+    } else {
+      // Normal range highlight
+      const changeText = content.slice(safeStart, safeEnd);
+      const lineCount = changeText.split('\n').length;
+      const endLine = startLine + lineCount - 1;
 
-      // Remove previous highlight style if exists
+      const selectors: string[] = [];
+      for (let i = startLine; i <= endLine; i++) {
+        selectors.push(`.editor-view .cm-content .cm-line:nth-child(${i})`);
+      }
+      style.textContent = `
+        ${selectors.join(',\n')} {
+          background-color: #fff3cd !important;
+        }
+      `;
+    }
+    document.head.appendChild(style);
+    highlightStyleEl = style;
+
+    // Scroll function - re-query elements as DOM may have changed
+    const doScroll = () => {
+      const freshEditorEl = document.querySelector('.editor-view .cm-content') as HTMLElement;
+      if (!freshEditorEl) return;
+      const freshLines = freshEditorEl.querySelectorAll('.cm-line');
+      const freshTarget = freshLines[startLine - 1] as HTMLElement;
+      if (freshTarget) {
+        freshTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    };
+
+    // Multiple scroll attempts to handle async rendering
+    doScroll();
+    setTimeout(doScroll, 300);
+    setTimeout(doScroll, 600);
+
+    // Remove highlight after delay
+    setTimeout(() => {
       if (highlightStyleEl) {
         highlightStyleEl.remove();
         highlightStyleEl = null;
       }
-
-      // Apply highlight style first (survives image re-renders)
-      const style = document.createElement('style');
-      if (safeStart === safeEnd) {
-        // Point indicator for insert undo / delete apply
-        style.textContent = `
-          .editor-view .cm-content .cm-line:nth-child(${startLine})::after {
-            content: '';
-            display: block;
-            height: 3px;
-            background: linear-gradient(90deg, #f0ad4e, #ec971f);
-            margin-top: 2px;
-            border-radius: 2px;
-          }
-        `;
-      } else {
-        // Normal range highlight
-        const changeText = content.slice(safeStart, safeEnd);
-        const lineCount = changeText.split('\n').length;
-        const endLine = startLine + lineCount - 1;
-
-        const selectors: string[] = [];
-        for (let i = startLine; i <= endLine; i++) {
-          selectors.push(`.editor-view .cm-content .cm-line:nth-child(${i})`);
-        }
-        style.textContent = `
-          ${selectors.join(',\n')} {
-            background-color: #fff3cd !important;
-          }
-        `;
-      }
-      document.head.appendChild(style);
-      highlightStyleEl = style;
-
-      // Scroll function - re-query elements as DOM may have changed
-      const doScroll = () => {
-        const freshEditorEl = document.querySelector('.editor-view .cm-content') as HTMLElement;
-        if (!freshEditorEl) return;
-        const freshLines = freshEditorEl.querySelectorAll('.cm-line');
-        const freshTarget = freshLines[startLine - 1] as HTMLElement;
-        if (freshTarget) {
-          freshTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      };
-
-      // First scroll attempt
-      if (targetLine) {
-        targetLine.scrollIntoView({ behavior: 'auto', block: 'center' });
-      }
-
-      // Second scroll after images likely loaded
-      setTimeout(doScroll, 500);
-
-      // Remove highlight after delay
-      setTimeout(() => {
-        if (highlightStyleEl) {
-          highlightStyleEl.remove();
-          highlightStyleEl = null;
-        }
-      }, 2500);
-    });
-  }, 300);
+    }, 2500);
+  }, 100);
 };
 
 /**
@@ -482,16 +469,18 @@ const handleAiChange = (
  */
 const handleAiUndo = (change: AgentChange, callback: (success: boolean) => void) => {
   if (change.undoData) {
-    // 检查当前内容是否与应用后的内容一致（防止用户手动修改后撤回出错）
+    // Check if content matches applied content
     if (currentDoc.value.content === change.undoData.appliedContent) {
       currentDoc.value.content = change.undoData.originalContent;
       ElMessage.success("已撤回修改");
       mdKey.value++;
       callback(true);
-      // Scroll to undo position and highlight
-      if (change.undoData.undoStart >= 0) {
-        scrollToAndSelect(change.undoData.undoStart, change.undoData.undoEnd);
-      }
+      // Wait for editor re-render, then scroll
+      nextTick(() => {
+        if (change.undoData!.undoStart >= 0) {
+          scrollToAndSelect(change.undoData!.undoStart, change.undoData!.undoEnd);
+        }
+      });
     } else {
       ElMessage.warning("文档已被修改，无法撤回");
       callback(false);
