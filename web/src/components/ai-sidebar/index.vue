@@ -117,7 +117,19 @@
 
         <!-- AI 输出 -->
         <div class="ai-output" v-if="task.output || task.status === 'processing'">
-          <div class="task-label">Output</div>
+          <div class="output-label-row">
+            <div class="task-label">Output</div>
+            <el-button
+              v-if="task.output && task.status !== 'processing'"
+              text
+              size="small"
+              class="copy-output-btn"
+              @click="copyOutput(task.output)"
+              title="复制回复"
+            >
+              <el-icon><CopyDocument /></el-icon>
+            </el-button>
+          </div>
           <div class="output-content">
             <MdPreview v-if="task.output" :modelValue="task.output" previewTheme="cyanosis" />
             <span v-else-if="task.status === 'processing'" class="cursor-blink">▋</span>
@@ -175,7 +187,7 @@
 <script lang="ts" setup>
 import { ref, shallowRef, computed, watch, onMounted, onUnmounted, nextTick, triggerRef } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { Delete, Close, Warning, ArrowRight, VideoPause, Download, Search } from "@element-plus/icons-vue";
+import { Delete, Close, Warning, ArrowRight, VideoPause, Download, Search, CopyDocument } from "@element-plus/icons-vue";
 import { MdPreview } from "md-editor-v3";
 import "md-editor-v3/lib/preview.css";
 import AIApi from "@/api/ai";
@@ -732,6 +744,17 @@ const deleteTask = async (index: number) => {
   }
 };
 
+// 复制AI回复内容
+const copyOutput = async (content: string) => {
+  try {
+    await navigator.clipboard.writeText(content);
+    ElMessage.success("已复制到剪贴板");
+  } catch (err) {
+    console.error("复制失败", err);
+    ElMessage.error("复制失败");
+  }
+};
+
 // 拖拽调整大小
 let isResizing = false;
 let startX = 0;
@@ -987,6 +1010,26 @@ const stopResize = () => {
 
 .ai-output {
   margin-bottom: 12px;
+
+  .output-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+
+    .task-label {
+      margin-bottom: 0;
+    }
+
+    .copy-output-btn {
+      padding: 2px 4px;
+      color: #909399;
+
+      &:hover {
+        color: #409eff;
+      }
+    }
+  }
 
   .output-content {
     font-size: 14px;
