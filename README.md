@@ -1,5 +1,7 @@
 # 云文档
 
+> 本仓库为 [md](https://github.com/yanyunling/md) 增加了 AI 对话辅助功能
+
 ## 介绍
 
 一个简单的 Markdown、OpenAPI 文档服务器，支持 AI 辅助编辑功能
@@ -36,7 +38,7 @@
 
 ## docker 镜像
 
-- [https://hub.docker.com/r/streamerzero/md](https://hub.docker.com/r/streamerzero/md)
+- [https://hub.docker.com/r/szcq/md](https://hub.docker.com/r/szcq/md)
 
 ## AI 功能
 
@@ -48,9 +50,7 @@
 
 - **基础配置**：填写 Base URL、API Key，选择模型
 - **系统提示词**：管理多个系统提示词，可通过开关启用/禁用，支持切换使用
-- **模式设置**：
-  - 启用 AI 面板：在编辑器工具栏显示 AI 按钮
-  - 允许读取当前文档：AI 可访问当前文档内容作为上下文
+- **模式设置**：允许读取当前文档：AI 可访问当前文档内容作为上下文
 - **同步设置**：将配置同步到服务器，支持多设备使用
 
 ### 功能特性
@@ -74,3 +74,4 @@
 - 收缩边栏："云文档"标题左侧图标
 - 发布链接：文档列表蓝色倒三角
 - 公开文档列表：登录页"云文档"标题
+- AI 配置：AI 侧边栏顶部的模型名称（显示"未配置模型"或当前模型名）
