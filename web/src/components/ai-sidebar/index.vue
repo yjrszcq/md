@@ -841,11 +841,14 @@ const stopResize = () => {
       font-size: 14px;
       font-weight: 500;
       color: #303133;
+      justify-content: flex-start;
 
-      :deep(.el-button__text-wrapper) {
+      :deep(span) {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        display: block;
+        text-align: left;
       }
 
       &:hover {
