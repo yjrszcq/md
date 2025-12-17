@@ -1,7 +1,7 @@
 <template>
-  <div class="ai-sidebar" :class="{ hidden: !visible }" :style="{ width: sidebarWidth + 'px' }">
+  <div class="ai-sidebar" :class="{ hidden: !visible }" :style="sidebarStyle">
     <!-- 拖拽调整大小手柄 -->
-    <div class="resize-handle" @mousedown="startResize"></div>
+    <div class="resize-handle" @mousedown="startResize" @touchstart="startResize"></div>
 
     <!-- 顶部工具栏 -->
     <div class="sidebar-header">
@@ -240,10 +240,29 @@ const emit = defineEmits<{
 const inputText = ref("");
 const sending = ref(false);
 const sidebarWidth = ref(380);
+const sidebarWidthPercent = ref(50); // For landscape mobile mode (percentage)
+const isLandscapeMobile = ref(false);
 const tasks = shallowRef<TaskBlock[]>([]);
 const taskBlocksRef = ref<HTMLElement | null>(null);
 const expandedReasonings = ref<Set<string>>(new Set());
 const abortController = ref<AbortController | null>(null);
+
+// Computed style for sidebar width
+const sidebarStyle = computed(() => {
+  if (isLandscapeMobile.value) {
+    return { width: sidebarWidthPercent.value + '%' };
+  }
+  return { width: sidebarWidth.value + 'px' };
+});
+
+// Check and update landscape mobile state
+const updateLandscapeMobileState = () => {
+  // Landscape mobile: width > height and viewport width <= 1024px and height < 500px
+  isLandscapeMobile.value = window.innerWidth > window.innerHeight &&
+                             window.innerWidth > 720 &&
+                             window.innerWidth <= 1024 &&
+                             window.innerHeight < 500;
+};
 
 // Auto-scroll state
 const autoScrollEnabled = ref(true);
@@ -387,11 +406,14 @@ const handleAiConfigChanged = (event: CustomEvent<AIConfig>) => {
 onMounted(() => {
   loadConfig();
   loadConversations();
+  updateLandscapeMobileState();
   window.addEventListener("ai-config-changed", handleAiConfigChanged as EventListener);
+  window.addEventListener("resize", updateLandscapeMobileState);
 });
 
 onUnmounted(() => {
   window.removeEventListener("ai-config-changed", handleAiConfigChanged as EventListener);
+  window.removeEventListener("resize", updateLandscapeMobileState);
   abortController.value?.abort();
 });
 
@@ -771,33 +793,54 @@ const copyOutput = async (content: string) => {
 let isResizing = false;
 let startX = 0;
 let startWidth = 0;
+let startWidthPercent = 0;
 
-const startResize = (e: MouseEvent) => {
+const startResize = (e: MouseEvent | TouchEvent) => {
   isResizing = true;
-  startX = e.clientX;
+  const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+  startX = clientX;
   startWidth = sidebarWidth.value;
+  startWidthPercent = sidebarWidthPercent.value;
   document.addEventListener("mousemove", doResize);
   document.addEventListener("mouseup", stopResize);
+  document.addEventListener("touchmove", doResize, { passive: false });
+  document.addEventListener("touchend", stopResize);
+  e.preventDefault();
 };
 
-const doResize = (e: MouseEvent) => {
+const doResize = (e: MouseEvent | TouchEvent) => {
   if (!isResizing) return;
-  const diff = startX - e.clientX;
-  const newWidth = Math.max(300, Math.min(600, startWidth + diff));
-  sidebarWidth.value = newWidth;
+  e.preventDefault();
+  const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+  const diff = startX - clientX;
+
+  if (isLandscapeMobile.value) {
+    // Landscape mobile: use percentage (50% to 100%)
+    const diffPercent = (diff / window.innerWidth) * 100;
+    const newPercent = Math.max(50, Math.min(100, startWidthPercent + diffPercent));
+    sidebarWidthPercent.value = newPercent;
+  } else {
+    // Desktop: use pixels (300px to 600px)
+    const newWidth = Math.max(300, Math.min(600, startWidth + diff));
+    sidebarWidth.value = newWidth;
+  }
 };
 
 const stopResize = () => {
   isResizing = false;
-  AIConfigStore.setSidebarWidth(sidebarWidth.value);
+  if (!isLandscapeMobile.value) {
+    AIConfigStore.setSidebarWidth(sidebarWidth.value);
+  }
   document.removeEventListener("mousemove", doResize);
   document.removeEventListener("mouseup", stopResize);
+  document.removeEventListener("touchmove", doResize);
+  document.removeEventListener("touchend", stopResize);
 };
 
 // Input area height resize
 const MIN_INPUT_HEIGHT_DEFAULT = 140;
-const MIN_INPUT_HEIGHT_LANDSCAPE = 80;
-const MAX_INPUT_HEIGHT_DEFAULT = 400;
+const MIN_INPUT_HEIGHT_LANDSCAPE = 100;
+const MAX_INPUT_HEIGHT_DEFAULT = 600;
 const inputAreaHeight = ref(MIN_INPUT_HEIGHT_DEFAULT);
 let isInputResizing = false;
 let inputStartY = 0;
@@ -1318,13 +1361,31 @@ const stopInputResize = () => {
     top: 50px;
     right: 0;
     bottom: 0;
-    width: min(380px, 50vw) !important;
     height: calc(100% - 50px);
     z-index: 1000;
   }
 
   .resize-handle {
-    display: none;
+    display: block;
+    width: 12px;
+
+    &::before {
+      content: "";
+      position: absolute;
+      left: 4px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 4px;
+      height: 40px;
+      background: #dcdfe6;
+      border-radius: 2px;
+      transition: background 0.2s;
+    }
+
+    &:hover::before,
+    &:active::before {
+      background: #409eff;
+    }
   }
 }
 </style>
