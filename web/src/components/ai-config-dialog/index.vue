@@ -633,6 +633,7 @@ const handleClose = () => {
   margin-top: 20px;
   display: flex;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .conflict-buttons {
@@ -705,9 +706,12 @@ const handleClose = () => {
     // Adjust sync actions
     .sync-actions {
       flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
 
       .el-button {
         width: 100%;
+        margin: 0 !important;
       }
     }
 

@@ -127,15 +127,17 @@ onMounted(() => {
       currentDoc.value = res;
     }
   });
+  window.addEventListener("beforeunload", handleBeforeUnload);
 });
 
 onBeforeUnmount(() => {
   if (Token.getAccessToken()) {
     DocCache.setDoc(currentDoc.value);
   }
+  window.removeEventListener("beforeunload", handleBeforeUnload);
 });
 
-window.onbeforeunload = () => {
+const handleBeforeUnload = () => {
   if (Token.getAccessToken()) {
     DocCache.setDoc(currentDoc.value);
   }
@@ -196,14 +198,16 @@ const codemirrorReady = () => {
 };
 
 /**
- * 上传图片
+ * Upload images to server
  */
 const uploadImage = async (files: File[], callback: (urls: string[]) => void) => {
   const pathList: string[] = [];
-  for (let file of files) {
+  for (const file of files) {
     try {
       pathList.push(hostUrl.value + (await uploadPicture(file)));
-    } catch (e) {}
+    } catch (e) {
+      console.error("Image upload failed:", file.name, e);
+    }
   }
   callback(pathList);
 };

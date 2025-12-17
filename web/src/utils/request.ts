@@ -96,20 +96,20 @@ dataInstance.interceptors.response.use(
                     reject(dataError);
                   });
               })
-              .catch(() => {
+              .catch((err) => {
                 refreshing = false;
-                // 刷新token失败，清空token信息并刷新页面
+                // Refresh token failed, clear token and reload page
                 Token.removeToken();
-                reject();
+                reject(err);
               });
           } else {
-            // 如已经在刷新token，等待token刷新完毕，重新进行上一次的请求
+            // Token refresh already in progress, wait and retry the original request
             const interval = setInterval(() => {
               if (!refreshing) {
                 clearInterval(interval);
-                // 重设头信息中的token
+                // Reset Authorization header with new token
                 response.config.headers.Authorization = "Bearer " + Token.getAccessToken();
-                // 重新进行上一次的请求
+                // Retry the original request
                 dataInstance(response.config)
                   .then((dataResult) => {
                     resolve(dataResult);

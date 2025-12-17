@@ -1,57 +1,50 @@
-interface Token {
-  nameKey: string;
-  accessTokenKey: string;
-  refreshTokenKey: string;
-}
+const STORAGE_KEYS = {
+  name: "Name",
+  accessToken: "AccessToken",
+  refreshToken: "RefreshToken",
+} as const;
 
-class Token {
-  constructor() {
-    this.nameKey = "Name";
-    this.accessTokenKey = "AccessToken";
-    this.refreshTokenKey = "RefreshToken";
-  }
-
+class TokenStore {
   /**
-   * 缓存token
-   * @param token
+   * Save token to localStorage
    */
   setToken(token: TokenResult) {
     if (token) {
-      localStorage.setItem(this.nameKey, token.name);
-      localStorage.setItem(this.accessTokenKey, token.accessToken);
-      localStorage.setItem(this.refreshTokenKey, token.refreshToken);
+      localStorage.setItem(STORAGE_KEYS.name, token.name);
+      localStorage.setItem(STORAGE_KEYS.accessToken, token.accessToken);
+      localStorage.setItem(STORAGE_KEYS.refreshToken, token.refreshToken);
     }
   }
 
   /**
-   * 清空token
+   * Clear token and reload page
    */
   removeToken() {
-    localStorage.removeItem(this.accessTokenKey);
-    localStorage.removeItem(this.refreshTokenKey);
+    localStorage.removeItem(STORAGE_KEYS.accessToken);
+    localStorage.removeItem(STORAGE_KEYS.refreshToken);
     location.reload();
   }
 
   /**
-   * 获取用户名
+   * Get username
    */
   getName() {
-    return localStorage.getItem(this.nameKey);
+    return localStorage.getItem(STORAGE_KEYS.name);
   }
 
   /**
-   * 获取AccessToken
+   * Get access token
    */
   getAccessToken() {
-    return localStorage.getItem(this.accessTokenKey);
+    return localStorage.getItem(STORAGE_KEYS.accessToken);
   }
 
   /**
-   * 获取RefreshToken
+   * Get refresh token
    */
   getRefreshToken() {
-    return localStorage.getItem(this.refreshTokenKey);
+    return localStorage.getItem(STORAGE_KEYS.refreshToken);
   }
 }
 
-export default new Token();
+export default new TokenStore();

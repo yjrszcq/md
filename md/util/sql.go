@@ -15,7 +15,8 @@ type SqlCompletion struct {
 	initCountSql string
 	whereSql     strings.Builder
 	groupSql     string
-	havingSql    string
+	havingSql    strings.Builder
+	havingParams []interface{}
 	orderSql     strings.Builder
 	limitSql     string
 	paramIndex   int
@@ -39,24 +40,25 @@ func (s *SqlCompletion) InitSqlAndCount(sql, countSql string) *SqlCompletion {
 	return s
 }
 
-// 获取sql语句
+// GetSql returns the complete SQL query string.
 func (s *SqlCompletion) GetSql() string {
-	return s.initSql + s.whereSql.String() + s.groupSql + s.havingSql + s.orderSql.String() + s.limitSql
+	return s.initSql + s.whereSql.String() + s.groupSql + s.havingSql.String() + s.orderSql.String() + s.limitSql
 }
 
-// 获取行数sql语句
+// GetCountSql returns the SQL query string for counting rows.
 func (s *SqlCompletion) GetCountSql() string {
-	return s.initCountSql + s.whereSql.String() + s.groupSql + s.havingSql
+	return s.initCountSql + s.whereSql.String() + s.groupSql + s.havingSql.String()
 }
 
-// 获取条件列表
+// GetParams returns all query parameters in order.
 func (s *SqlCompletion) GetParams() []interface{} {
-	return append(s.whereParams, s.limitParams...)
+	params := append(s.whereParams, s.havingParams...)
+	return append(params, s.limitParams...)
 }
 
-// 获取行数条件列表
+// GetCountParams returns parameters for the count query.
 func (s *SqlCompletion) GetCountParams() []interface{} {
-	return s.whereParams
+	return append(s.whereParams, s.havingParams...)
 }
 
 // =
@@ -129,15 +131,33 @@ func (s *SqlCompletion) IsNotNull(field string, isAnd bool) *SqlCompletion {
 	return s
 }
 
-// 分组，只设置最后一次
+// Group sets GROUP BY clause. Only the last call takes effect.
+// WARNING: fields is not parameterized, only pass trusted column names.
 func (s *SqlCompletion) Group(fields string) *SqlCompletion {
 	s.groupSql = " group by " + fields
 	return s
 }
 
-// having条件，只设置最后一次
-func (s *SqlCompletion) Having(fields string) *SqlCompletion {
-	s.havingSql = " having " + fields
+// Having adds a parameterized HAVING condition.
+// Example: Having("count(*)", 5, ">", true) generates "HAVING count(*) > $n"
+func (s *SqlCompletion) Having(field string, param interface{}, symbol string, isAnd bool) *SqlCompletion {
+	s.paramIndex++
+	paramPlaceholder := "$" + strconv.Itoa(s.paramIndex)
+
+	if s.havingSql.Len() == 0 {
+		s.havingSql.WriteString(" having ")
+	} else if isAnd {
+		s.havingSql.WriteString(" and ")
+	} else {
+		s.havingSql.WriteString(" or ")
+	}
+
+	s.havingSql.WriteString(field)
+	s.havingSql.WriteString(" ")
+	s.havingSql.WriteString(symbol)
+	s.havingSql.WriteString(" ")
+	s.havingSql.WriteString(paramPlaceholder)
+	s.havingParams = append(s.havingParams, param)
 	return s
 }
 
