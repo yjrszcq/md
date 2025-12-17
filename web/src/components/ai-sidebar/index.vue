@@ -235,7 +235,7 @@ const config = ref<AIConfig>({
   currentPromptId: "",
   systemPromptEnabled: false,
   docContextEnabled: false,
-  panelEnabled: false,
+  syncEnabled: false,
 });
 
 // 过滤后的对话列表

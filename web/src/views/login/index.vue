@@ -50,6 +50,7 @@
 import { ref, onMounted } from "vue";
 import Token from "@/store/token";
 import TokenApi from "@/api/token";
+import AIApi from "@/api/ai";
 import { ElMessage } from "element-plus";
 import { useRouter } from "vue-router";
 import TextRain from "@/components/text-rain/index.vue";
@@ -104,6 +105,17 @@ const loginClick = () => {
         // 登录时清除AI缓存，避免残留其他用户的数据
         await AIConfigStore.clearAll();
         Token.setToken(res.data);
+
+        // Check if server has AI config with syncEnabled=true, auto-sync if so
+        try {
+          const configRes = await AIApi.getConfigFull();
+          if (configRes.data && configRes.data.syncEnabled) {
+            await AIConfigStore.setConfig(configRes.data);
+          }
+        } catch {
+          // Ignore errors, user can manually sync later
+        }
+
         router.push({ name: "layout" });
       })
       .finally(() => {

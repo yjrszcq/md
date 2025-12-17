@@ -7,12 +7,6 @@ import { ChatDotSquare } from "@element-plus/icons-vue";
 
 export default defineComponent({
   name: "MdEditor",
-  props: {
-    showAiButton: {
-      type: Boolean,
-      default: false,
-    },
-  },
   emits: ["export", "aiToggle"],
   setup(props, { emit }) {
     const exportClick = () => {
@@ -55,7 +49,7 @@ export default defineComponent({
             "preview",
             "htmlPreview",
             "catalog",
-            ...(props.showAiButton ? [1] : []),
+            1,
           ]}
           previewTheme="cyanosis"
           codeTheme="github"
@@ -73,17 +67,15 @@ export default defineComponent({
                   </div>
                 }
               ></NormalToolbar>
-              {props.showAiButton && (
-                <NormalToolbar
-                  title="AI 助手"
-                  onClick={aiClick}
-                  trigger={
-                    <div class="md-editor-icon">
-                      <ChatDotSquare />
-                    </div>
-                  }
-                ></NormalToolbar>
-              )}
+              <NormalToolbar
+                title="AI 助手"
+                onClick={aiClick}
+                trigger={
+                  <div class="md-editor-icon">
+                    <ChatDotSquare />
+                  </div>
+                }
+              ></NormalToolbar>
             </Fragment>
           }
         />

@@ -15,7 +15,7 @@ interface AIConfig {
   currentPromptId: string;
   systemPromptEnabled: boolean;
   docContextEnabled: boolean;
-  panelEnabled: boolean;
+  syncEnabled: boolean;
 }
 
 // 聊天消息

@@ -82,10 +82,6 @@
       <!-- 模式设置 -->
       <el-tab-pane label="模式设置" name="mode">
         <el-form label-width="160px" label-position="left">
-          <el-form-item label="启用 AI 面板">
-            <el-switch v-model="form.panelEnabled" />
-            <span class="form-tip">开启后在编辑器工具栏显示 AI 按钮</span>
-          </el-form-item>
           <el-form-item label="允许读取当前文档">
             <el-switch v-model="form.docContextEnabled" />
             <span class="form-tip">开启后 AI 可以访问当前编辑的文档内容</span>
@@ -203,7 +199,7 @@ const form = ref<AIConfig>({
   currentPromptId: "",
   systemPromptEnabled: false,
   docContextEnabled: false,
-  panelEnabled: false,
+  syncEnabled: false,
 });
 
 // 提示词编辑
@@ -241,9 +237,9 @@ onMounted(() => {
 
 // 加载配置
 const loadConfig = async () => {
-  saveToServer.value = AIConfigStore.getSyncToServer();
   const localConfig = await AIConfigStore.getConfig();
   form.value = { ...localConfig };
+  saveToServer.value = localConfig.syncEnabled;
 
   // 加载缓存的模型列表
   const cachedModels = await AIConfigStore.getModels();
@@ -364,8 +360,8 @@ const handleSyncChange = async (enabled: boolean) => {
         saveToServer.value = false; // 暂时关闭，等用户确认
       } else {
         // 直接保存到服务器
+        form.value.syncEnabled = true;
         await saveConfigToServer();
-        AIConfigStore.setSyncToServer(true);
         ElMessage.success("已开启服务器同步");
       }
     } catch (err: any) {
@@ -390,12 +386,19 @@ const handleSyncChange = async (enabled: boolean) => {
         } catch (err: any) {
           ElMessage.error(err.message || "删除失败");
         }
-        AIConfigStore.setSyncToServer(false);
+        form.value.syncEnabled = false;
+        await AIConfigStore.setConfig(form.value);
       })
-      .catch((action) => {
+      .catch(async (action) => {
         if (action === "cancel") {
-          // 保留备份
-          AIConfigStore.setSyncToServer(false);
+          // 保留备份，但更新服务器上的syncEnabled为false
+          form.value.syncEnabled = false;
+          await AIConfigStore.setConfig(form.value);
+          try {
+            await AIApi.saveConfig(form.value);
+          } catch {
+            // Ignore server sync errors
+          }
           ElMessage.info("已关闭同步，服务器备份已保留");
         } else {
           // 取消操作
@@ -425,8 +428,8 @@ const doOverwrite = async (exportFirst: boolean) => {
     });
   }
   overwriteDialogVisible.value = false;
+  form.value.syncEnabled = true;
   await saveConfigToServer();
-  AIConfigStore.setSyncToServer(true);
   saveToServer.value = true;
   ElMessage.success("已覆盖服务器配置");
 };
@@ -439,10 +442,12 @@ const doUseServer = async (exportFirst: boolean) => {
   }
   useServerDialogVisible.value = false;
   if (serverConfig.value) {
+    serverConfig.value.syncEnabled = true;
     form.value = { ...serverConfig.value };
     await AIConfigStore.setConfig(form.value);
+    // Update server with syncEnabled = true
+    await AIApi.saveConfig(form.value);
   }
-  AIConfigStore.setSyncToServer(true);
   saveToServer.value = true;
   ElMessage.success("已使用服务器配置");
 };
@@ -497,6 +502,9 @@ const saveConfigToServer = async () => {
 const handleSave = async () => {
   saving.value = true;
   try {
+    // Ensure syncEnabled matches the UI state
+    form.value.syncEnabled = saveToServer.value;
+
     // 保存到本地
     await AIConfigStore.setConfig(form.value);
 

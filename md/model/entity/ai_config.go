@@ -11,7 +11,7 @@ type AIConfig struct {
 	CurrentPromptId     string `json:"currentPromptId" db:"current_prompt_id"`
 	SystemPromptEnabled bool   `json:"systemPromptEnabled" db:"system_prompt_enabled"`
 	DocContextEnabled   bool   `json:"docContextEnabled" db:"doc_context_enabled"`
-	PanelEnabled        bool   `json:"panelEnabled" db:"panel_enabled"`
+	SyncEnabled         bool   `json:"syncEnabled" db:"sync_enabled"`
 	CreateTime          int64  `json:"createTime" db:"create_time"`
 	UpdateTime          int64  `json:"updateTime" db:"update_time"`
 }
@@ -33,5 +33,5 @@ type AIConfigCondition struct {
 	CurrentPromptId     string         `json:"currentPromptId"`
 	SystemPromptEnabled bool           `json:"systemPromptEnabled"`
 	DocContextEnabled   bool           `json:"docContextEnabled"`
-	PanelEnabled        bool           `json:"panelEnabled"`
+	SyncEnabled         bool           `json:"syncEnabled"`
 }

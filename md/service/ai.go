@@ -39,7 +39,7 @@ func AIConfigGet(userId string) entity.AIConfigCondition {
 		CurrentPromptId:     config.CurrentPromptId,
 		SystemPromptEnabled: config.SystemPromptEnabled,
 		DocContextEnabled:   config.DocContextEnabled,
-		PanelEnabled:        config.PanelEnabled,
+		SyncEnabled:         config.SyncEnabled,
 	}
 }
 
@@ -82,7 +82,7 @@ func AIConfigSave(userId string, condition entity.AIConfigCondition) {
 		CurrentPromptId:     condition.CurrentPromptId,
 		SystemPromptEnabled: condition.SystemPromptEnabled,
 		DocContextEnabled:   condition.DocContextEnabled,
-		PanelEnabled:        condition.PanelEnabled,
+		SyncEnabled:         condition.SyncEnabled,
 		UpdateTime:          time.Now().UnixMilli(),
 	}
 
@@ -163,7 +163,7 @@ func AIConfigGetFull(userId string) entity.AIConfigCondition {
 		CurrentPromptId:     config.CurrentPromptId,
 		SystemPromptEnabled: config.SystemPromptEnabled,
 		DocContextEnabled:   config.DocContextEnabled,
-		PanelEnabled:        config.PanelEnabled,
+		SyncEnabled:         config.SyncEnabled,
 	}
 }
 

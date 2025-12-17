@@ -45,7 +45,6 @@
           class="editor-view"
           v-model="currentDoc.content"
           v-loading="mdLoading"
-          :showAiButton="aiConfig.panelEnabled"
           @onUploadImg="uploadImage"
           @onSave="saveDoc"
           @export="exportMarkdown(currentDoc.name, currentDoc.content)"
@@ -75,7 +74,6 @@ import { uploadPicture } from "../picture/util";
 import Book from "./components/book.vue";
 import Doc from "./components/doc.vue";
 import DocCache from "@/store/doc-cache";
-import AIConfigStore from "@/store/ai-config";
 import Token from "@/store/token";
 import { host } from "@/config";
 import crypto from "crypto-js";
@@ -110,16 +108,6 @@ const mdLoading = ref(false);
 const mdKey = ref(0);
 const codemirrorVisibility = ref("hidden");
 const aiSidebarVisible = ref(false);
-const aiConfig = ref<AIConfig>({
-  baseUrl: "",
-  apiKey: "",
-  model: "",
-  systemPrompts: [],
-  currentPromptId: "",
-  systemPromptEnabled: false,
-  docContextEnabled: false,
-  panelEnabled: false,
-});
 
 const docType = computed(() => {
   return currentDoc.value.type;
@@ -131,16 +119,6 @@ watch(docType, (newVal, oldVal) => {
   }
 });
 
-// 加载 AI 配置
-const loadAiConfig = async () => {
-  aiConfig.value = await AIConfigStore.getConfig();
-};
-
-// 监听 AI 配置变化事件
-const handleAiConfigChanged = (event: CustomEvent<AIConfig>) => {
-  aiConfig.value = event.detail;
-};
-
 onMounted(() => {
   hostUrl.value = process.env.NODE_ENV === "production" ? location.origin : host;
   DocCache.getDoc().then((res) => {
@@ -148,15 +126,12 @@ onMounted(() => {
       currentDoc.value = res;
     }
   });
-  loadAiConfig();
-  window.addEventListener("ai-config-changed", handleAiConfigChanged as EventListener);
 });
 
 onBeforeUnmount(() => {
   if (Token.getAccessToken()) {
     DocCache.setDoc(currentDoc.value);
   }
-  window.removeEventListener("ai-config-changed", handleAiConfigChanged as EventListener);
 });
 
 window.onbeforeunload = () => {

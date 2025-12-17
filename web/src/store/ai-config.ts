@@ -15,11 +15,6 @@ const getModelsKey = () => {
   return "AIModels_" + Token.getName();
 };
 
-// 获取同步状态key
-const getSyncKey = () => {
-  return "AISyncToServer_" + Token.getName();
-};
-
 // 获取侧边栏宽度key
 const getSidebarWidthKey = () => {
   return "AISidebarWidth";
@@ -39,7 +34,7 @@ const defaultConfig: AIConfig = {
   currentPromptId: "",
   systemPromptEnabled: false,
   docContextEnabled: false,
-  panelEnabled: false,
+  syncEnabled: false,
 };
 
 class AIConfigStore {
@@ -108,20 +103,6 @@ class AIConfigStore {
    */
   removeModels(): Promise<void> {
     return store.removeItem(getModelsKey());
-  }
-
-  /**
-   * 设置与服务器同步状态
-   */
-  setSyncToServer(enabled: boolean): void {
-    localStorage.setItem(getSyncKey(), String(enabled));
-  }
-
-  /**
-   * 获取与服务器同步状态
-   */
-  getSyncToServer(): boolean {
-    return localStorage.getItem(getSyncKey()) === "true";
   }
 
   /**
@@ -200,7 +181,7 @@ class AIConfigStore {
     const keysToRemove: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key && (key.startsWith("AISyncToServer_") || key === "AISidebarWidth")) {
+      if (key && key === "AISidebarWidth") {
         keysToRemove.push(key);
       }
     }
