@@ -25,58 +25,82 @@
     </div>
 
     <!-- 对话选择栏 -->
-    <div class="conversation-bar">
-      <!-- 搜索按钮/搜索栏 -->
-      <div class="search-area" ref="searchAreaRef">
-        <template v-if="!searchExpanded">
-          <el-button text size="small" @click="expandSearch" title="搜索对话">
-            <el-icon><Search /></el-icon>
-          </el-button>
-        </template>
-        <template v-else>
-          <el-input
-            ref="searchInputRef"
-            v-model="searchKeyword"
-            size="small"
-            placeholder="搜索对话..."
-            clearable
-            @input="handleSearch"
-            @clear="handleSearchClear"
-            @keydown.esc="collapseSearch"
-          >
-            <template #prefix>
-              <el-icon><Search /></el-icon>
-            </template>
-          </el-input>
-          <el-button text size="small" @click="collapseSearch" title="取消搜索">
-            <el-icon><Close /></el-icon>
-          </el-button>
-        </template>
-      </div>
-      <!-- 对话选择下拉列表 -->
-      <el-select
-        ref="conversationSelectRef"
-        v-model="currentConversationId"
-        size="small"
-        placeholder="选择对话"
-        class="conversation-select"
-        @change="handleConversationChange"
-        @visible-change="handleSelectVisibleChange"
-        :disabled="sending"
-      >
-        <el-option label="+ 新建对话" value="" />
-        <el-option
-          v-for="conv in filteredConversations"
-          :key="conv.id"
-          :label="conv.title"
-          :value="conv.id"
+    <div class="conversation-bar" :class="{ 'search-mode': searchExpanded }">
+      <!-- 搜索模式：搜索框占满整行 -->
+      <template v-if="searchExpanded">
+        <el-input
+          ref="searchInputRef"
+          v-model="searchKeyword"
+          size="small"
+          placeholder="搜索对话..."
+          clearable
+          @input="handleSearch"
+          @clear="handleSearchClear"
+          @keydown.esc="collapseSearch"
+          class="search-input-full"
         >
-          <div class="conversation-option" :class="{ 'is-current': conv.id === currentConversationId }">
-            <span class="conv-title">{{ conv.title }}</span>
-            <span class="conv-time">{{ formatTime(conv.updateTime) }}</span>
-          </div>
-        </el-option>
-      </el-select>
+          <template #prefix>
+            <el-icon><Search /></el-icon>
+          </template>
+        </el-input>
+        <el-button text size="small" @click="collapseSearch" title="取消搜索">
+          <el-icon><Close /></el-icon>
+        </el-button>
+      </template>
+      <!-- 普通模式：搜索按钮 + 下拉列表 + 编辑按钮 -->
+      <template v-else>
+        <el-button text size="small" @click="expandSearch" title="搜索对话">
+          <el-icon><Search /></el-icon>
+        </el-button>
+        <el-select
+          v-model="currentConversationId"
+          size="small"
+          placeholder="选择对话"
+          class="conversation-select"
+          @change="handleConversationChange"
+          :disabled="sending"
+        >
+          <el-option label="+ 新建对话" value="" />
+          <el-option
+            v-for="conv in conversations"
+            :key="conv.id"
+            :label="conv.title"
+            :value="conv.id"
+          >
+            <div class="conversation-option" :class="{ 'is-current': conv.id === currentConversationId }">
+              <span class="conv-title">{{ conv.title }}</span>
+              <span class="conv-time">{{ formatTime(conv.updateTime) }}</span>
+            </div>
+          </el-option>
+        </el-select>
+        <el-button
+          v-if="currentConversationId"
+          text
+          size="small"
+          @click="openEditTitleDialog"
+          title="编辑对话标题"
+          :disabled="sending"
+        >
+          <el-icon><Edit /></el-icon>
+        </el-button>
+      </template>
+    </div>
+
+    <!-- 搜索结果下拉列表 -->
+    <div v-if="searchExpanded" class="search-results">
+      <div
+        v-for="conv in filteredConversations"
+        :key="conv.id"
+        class="search-result-item"
+        :class="{ 'is-current': conv.id === currentConversationId }"
+        @click="selectSearchResult(conv.id)"
+      >
+        <span class="conv-title">{{ conv.title }}</span>
+        <span class="conv-time">{{ formatTime(conv.updateTime) }}</span>
+      </div>
+      <div v-if="filteredConversations.length === 0" class="search-empty">
+        无匹配结果
+      </div>
     </div>
 
     <!-- 任务块区域 -->
@@ -130,7 +154,7 @@
             </el-button>
           </div>
           <div class="output-content">
-            <MdPreview v-if="task.output" :modelValue="task.output" previewTheme="cyanosis" />
+            <MdPreview v-if="task.output" :modelValue="task.output" previewTheme="cyanosis" :codeFoldable="task.status !== 'processing'" :autoFoldThreshold="30" />
             <span v-else-if="task.status === 'processing'" class="cursor-blink">▋</span>
           </div>
         </div>
@@ -186,7 +210,7 @@
 <script lang="ts" setup>
 import { ref, shallowRef, computed, watch, onMounted, onUnmounted, nextTick, triggerRef } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { Delete, Close, Warning, ArrowRight, VideoPause, Download, Search, CopyDocument } from "@element-plus/icons-vue";
+import { Delete, Close, Warning, ArrowRight, VideoPause, Download, Search, CopyDocument, Edit } from "@element-plus/icons-vue";
 import { MdPreview } from "md-editor-v3";
 import "md-editor-v3/lib/preview.css";
 import AIApi from "@/api/ai";
@@ -221,8 +245,6 @@ const currentConversationId = ref<string>("");
 const searchExpanded = ref(false);
 const searchKeyword = ref("");
 const searchInputRef = ref<HTMLInputElement | null>(null);
-const searchAreaRef = ref<HTMLElement | null>(null);
-const conversationSelectRef = ref<InstanceType<typeof import("element-plus").ElSelect> | null>(null);
 const isFirstAiResponse = ref(false);
 const searchDebounceTimer = ref<ReturnType<typeof setTimeout> | null>(null);
 const savedConversationId = ref<string>(""); // 保存搜索前的对话ID
@@ -299,54 +321,33 @@ const loadConversation = async (id: string) => {
   }
 };
 
-// 处理对话切换
+// 处理对话切换（普通模式下的 el-select）
 const handleConversationChange = async (id: string) => {
-  // 如果是从搜索结果中选择的，先关闭搜索模式（防止 visible-change 重新打开下拉列表）
-  const wasSearching = searchExpanded.value;
-  if (wasSearching) {
-    searchExpanded.value = false;
-    searchKeyword.value = "";
-  }
-
   await loadConversation(id);
-
-  if (wasSearching) {
-    await loadConversations();
-  }
   scrollToBottom();
 };
 
 // 搜索相关
 const expandSearch = () => {
   searchExpanded.value = true;
-  // 保存当前对话ID，用于取消搜索时恢复
   savedConversationId.value = currentConversationId.value;
   nextTick(() => {
-    // 先展开下拉列表，再聚焦搜索框
-    (conversationSelectRef.value as any)?.toggleMenu?.();
-    setTimeout(() => {
-      searchInputRef.value?.focus();
-    }, 50);
+    searchInputRef.value?.focus();
   });
 };
 
 const collapseSearch = () => {
   searchExpanded.value = false;
   searchKeyword.value = "";
-  // 恢复到搜索前的对话
   currentConversationId.value = savedConversationId.value;
-  // 关闭下拉列表
-  (conversationSelectRef.value as any)?.blur?.();
   loadConversations();
 };
 
 const handleSearch = () => {
-  // 清除之前的定时器
   if (searchDebounceTimer.value) {
     clearTimeout(searchDebounceTimer.value);
   }
 
-  // 设置防抖延迟
   searchDebounceTimer.value = setTimeout(async () => {
     if (!searchKeyword.value) {
       await loadConversations();
@@ -366,29 +367,14 @@ const handleSearchClear = () => {
   loadConversations();
 };
 
-// 处理下拉列表显示/隐藏
-const handleSelectVisibleChange = (visible: boolean) => {
-  // 如果在搜索模式下，下拉列表被关闭
-  if (!visible && searchExpanded.value) {
-    // 检查当前焦点是否在搜索区域内，如果是则不取消搜索
-    const activeElement = document.activeElement;
-    if (searchAreaRef.value?.contains(activeElement)) {
-      // 点击在搜索区域内，重新打开下拉列表
-      nextTick(() => {
-        (conversationSelectRef.value as any)?.toggleMenu?.();
-      });
-      return;
-    }
-
-    // 点击在其他地方，等待下拉列表动画结束后再收起搜索框
-    setTimeout(() => {
-      searchExpanded.value = false;
-      searchKeyword.value = "";
-      // 恢复到搜索前的对话
-      currentConversationId.value = savedConversationId.value;
-      loadConversations();
-    }, 200); // Element Plus 下拉动画约 200ms
-  }
+// 选择搜索结果
+const selectSearchResult = async (id: string) => {
+  searchExpanded.value = false;
+  searchKeyword.value = "";
+  currentConversationId.value = id;
+  await loadConversation(id);
+  await loadConversations();
+  scrollToBottom();
 };
 
 // 监听 AI 配置变化事件
@@ -695,6 +681,36 @@ const deleteCurrentConversation = async () => {
   }
 };
 
+// 编辑对话标题
+const openEditTitleDialog = async () => {
+  if (!currentConversationId.value) return;
+
+  // 获取当前对话标题
+  const currentConv = conversations.value.find(c => c.id === currentConversationId.value);
+  const currentTitle = currentConv?.title || "新对话";
+
+  try {
+    const { value: newTitle } = await ElMessageBox.prompt("请输入新的对话标题", "编辑标题", {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+      inputValue: currentTitle,
+      inputPattern: /\S+/,
+      inputErrorMessage: "标题不能为空",
+    });
+
+    if (newTitle && newTitle.trim() !== currentTitle) {
+      await AIApi.updateConversationTitle(currentConversationId.value, newTitle.trim());
+      await loadConversations();
+      ElMessage.success("标题已更新");
+    }
+  } catch (err: any) {
+    if (err !== "cancel") {
+      console.error("更新标题失败", err);
+      ElMessage.error("更新失败");
+    }
+  }
+};
+
 // 导出对话历史
 const exportHistory = () => {
   if (tasks.value.length === 0) {
@@ -879,19 +895,65 @@ const stopResize = () => {
   border-bottom: 1px solid #e4e7ed;
   flex-shrink: 0;
 
-  .search-area {
-    display: flex;
-    align-items: center;
-    gap: 4px;
+  &.search-mode {
+    border-bottom: none;
+  }
 
-    .el-input {
-      width: 120px;
-    }
+  .search-input-full {
+    flex: 1;
   }
 
   .conversation-select {
     flex: 1;
     min-width: 0;
+  }
+}
+
+.search-results {
+  max-height: 300px;
+  overflow-y: auto;
+  border-bottom: 1px solid #e4e7ed;
+  background: #fff;
+
+  .search-result-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background 0.15s;
+
+    &:hover {
+      background: #f5f7fa;
+    }
+
+    &.is-current {
+      background: #ecf5ff;
+    }
+
+    .conv-title {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 14px;
+      color: #303133;
+    }
+
+    .conv-time {
+      font-size: 12px;
+      color: #909399;
+      margin-left: 12px;
+      flex-shrink: 0;
+    }
+  }
+
+  .search-empty {
+    padding: 20px 16px;
+    text-align: center;
+    color: #909399;
+    font-size: 14px;
   }
 }
 
