@@ -89,7 +89,7 @@
     <!-- 搜索结果下拉列表 -->
     <div v-if="searchExpanded" class="search-results">
       <div
-        v-for="conv in filteredConversations"
+        v-for="conv in conversations"
         :key="conv.id"
         class="search-result-item"
         :class="{ 'is-current': conv.id === currentConversationId }"
@@ -98,7 +98,7 @@
         <span class="conv-title">{{ conv.title }}</span>
         <span class="conv-time">{{ formatTime(conv.updateTime) }}</span>
       </div>
-      <div v-if="filteredConversations.length === 0" class="search-empty">
+      <div v-if="conversations.length === 0" class="search-empty">
         无匹配结果
       </div>
     </div>
@@ -258,15 +258,6 @@ const config = ref<AIConfig>({
   systemPromptEnabled: false,
   docContextEnabled: false,
   syncEnabled: false,
-});
-
-// 过滤后的对话列表
-const filteredConversations = computed(() => {
-  if (!searchKeyword.value) {
-    return conversations.value;
-  }
-  const keyword = searchKeyword.value.toLowerCase();
-  return conversations.value.filter((c) => c.title.toLowerCase().includes(keyword));
 });
 
 // 格式化时间
