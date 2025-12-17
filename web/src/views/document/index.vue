@@ -56,6 +56,7 @@
         :docTitle="currentDoc.name"
         :docContent="currentDoc.content"
         @close="aiSidebarVisible = false"
+        @openConfig="openAiConfig"
       />
     </div>
   </div>
@@ -222,6 +223,13 @@ const saveDoc = (content: string) => {
  */
 const toggleAiSidebar = () => {
   aiSidebarVisible.value = !aiSidebarVisible.value;
+};
+
+/**
+ * 打开 AI 配置（通过全局事件通知 layout）
+ */
+const openAiConfig = () => {
+  window.dispatchEvent(new CustomEvent("open-ai-config"));
 };
 </script>
 

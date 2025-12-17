@@ -6,8 +6,15 @@
     <!-- 顶部工具栏 -->
     <div class="sidebar-header">
       <div class="header-left">
-        <span class="model-name" :title="config.model">{{ config.model || "未配置模型" }}</span>
-        <span class="status-dot" :class="statusClass"></span>
+        <el-button
+          class="model-btn"
+          text
+          size="small"
+          @click="emit('openConfig')"
+          :title="config.model || '点击配置 AI'"
+        >
+          {{ config.model || "未配置模型" }}
+        </el-button>
       </div>
       <div class="header-right">
         <div class="header-actions">
@@ -224,6 +231,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "close"): void;
+  (e: "openConfig"): void;
 }>();
 
 const inputText = ref("");
@@ -394,13 +402,6 @@ watch(
     }
   }
 );
-
-// 状态指示器样式
-const statusClass = computed(() => {
-  if (!config.value.baseUrl || !config.value.apiKey) return "status-error";
-  if (!config.value.model) return "status-warning";
-  return "status-ok";
-});
 
 // 输入框占位符
 const inputPlaceholder = computed(() => {
@@ -830,34 +831,25 @@ const stopResize = () => {
   flex-shrink: 0;
 
   .header-left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
 
-    .model-name {
+    .model-btn {
+      max-width: 100%;
+      padding: 4px 8px;
       font-size: 14px;
       font-weight: 500;
       color: #303133;
-      max-width: 180px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
 
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      flex-shrink: 0;
+      :deep(.el-button__text-wrapper) {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
 
-      &.status-ok {
-        background: #67c23a;
-      }
-      &.status-warning {
-        background: #e6a23c;
-      }
-      &.status-error {
-        background: #f56c6c;
+      &:hover {
+        color: #409eff;
       }
     }
   }
@@ -865,6 +857,7 @@ const stopResize = () => {
   .header-right {
     display: flex;
     align-items: center;
+    flex-shrink: 0;
 
     .header-actions {
       display: flex;

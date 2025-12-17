@@ -21,7 +21,6 @@
         <template #dropdown>
           <el-dropdown-menu>
             <el-dropdown-item style="user-select: none" @click="publishClick">公开文档</el-dropdown-item>
-            <el-dropdown-item style="user-select: none" @click="aiConfigVisible = true">AI 配置</el-dropdown-item>
             <el-dropdown-item style="user-select: none" @click="dialogVisible = true">修改密码</el-dropdown-item>
             <el-dropdown-item style="user-select: none" @click="logout">退出登录</el-dropdown-item>
           </el-dropdown-menu>
@@ -47,7 +46,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch } from "vue";
+import { ref, watch, onMounted, onUnmounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import SvgIcon from "@/components/svg-icon";
 import AiConfigDialog from "@/components/ai-config-dialog/index.vue";
@@ -67,6 +66,19 @@ const form = ref({ password: "", newPassword: "", confirmPassword: "" });
 const onlyPreview = ref(true);
 const isStretch = ref(true);
 const isDocument = ref(router.currentRoute.value.name === "document");
+
+// Listen for open-ai-config event from ai-sidebar
+const handleOpenAiConfig = () => {
+  aiConfigVisible.value = true;
+};
+
+onMounted(() => {
+  window.addEventListener("open-ai-config", handleOpenAiConfig);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("open-ai-config", handleOpenAiConfig);
+});
 
 watch(
   () => router.currentRoute.value.name,
