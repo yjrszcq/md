@@ -1,5 +1,5 @@
 <template>
-  <el-dialog v-model="visible" title="AI 配置" width="600px" :close-on-click-modal="false" @close="handleClose">
+  <el-dialog v-model="visible" title="AI 配置" width="600px" class="ai-config-dialog" :close-on-click-modal="false" @close="handleClose">
     <el-tabs v-model="activeTab">
       <!-- 基础配置 -->
       <el-tab-pane label="基础配置" name="basic">
@@ -111,7 +111,7 @@
     </template>
 
     <!-- 提示词编辑对话框 -->
-    <el-dialog v-model="promptDialogVisible" :title="editingPromptIndex === -1 ? '新增提示词' : '编辑提示词'" width="500px" append-to-body>
+    <el-dialog v-model="promptDialogVisible" :title="editingPromptIndex === -1 ? '新增提示词' : '编辑提示词'" width="500px" class="ai-config-dialog" append-to-body>
       <el-form label-width="80px">
         <el-form-item label="名称">
           <el-input v-model="editingPrompt.name" placeholder="提示词名称" />
@@ -127,7 +127,7 @@
     </el-dialog>
 
     <!-- 同步冲突对话框 -->
-    <el-dialog v-model="conflictDialogVisible" title="配置冲突" width="400px" append-to-body :close-on-click-modal="false">
+    <el-dialog v-model="conflictDialogVisible" title="配置冲突" width="400px" class="ai-config-dialog" append-to-body :close-on-click-modal="false">
       <p>服务器上已存在配置，请选择处理方式：</p>
       <template #footer>
         <div class="conflict-buttons">
@@ -139,7 +139,7 @@
     </el-dialog>
 
     <!-- 覆盖确认对话框 -->
-    <el-dialog v-model="overwriteDialogVisible" title="覆盖服务器配置" width="400px" append-to-body :close-on-click-modal="false">
+    <el-dialog v-model="overwriteDialogVisible" title="覆盖服务器配置" width="400px" class="ai-config-dialog" append-to-body :close-on-click-modal="false">
       <p>是否先导出服务器配置作为备份？</p>
       <template #footer>
         <el-button @click="overwriteDialogVisible = false">取消</el-button>
@@ -149,7 +149,7 @@
     </el-dialog>
 
     <!-- 使用服务器确认对话框 -->
-    <el-dialog v-model="useServerDialogVisible" title="使用服务器配置" width="400px" append-to-body :close-on-click-modal="false">
+    <el-dialog v-model="useServerDialogVisible" title="使用服务器配置" width="400px" class="ai-config-dialog" append-to-body :close-on-click-modal="false">
       <p>是否先导出本地配置作为备份？</p>
       <template #footer>
         <el-button @click="useServerDialogVisible = false">取消</el-button>
@@ -648,6 +648,85 @@ const handleClose = () => {
 .hide-text {
   :deep(input) {
     -webkit-text-security: disc;
+  }
+}
+</style>
+
+<!-- Global styles for dialog responsiveness -->
+<style lang="scss">
+@media (max-width: 720px) {
+  .ai-config-dialog {
+    --el-dialog-width: 90% !important;
+    width: 90% !important;
+    max-width: 90% !important;
+    margin: 5vh auto !important;
+
+    .el-dialog__body {
+      padding: 16px;
+    }
+
+    // Adjust form label on mobile
+    .el-form-item {
+      flex-direction: column;
+
+      .el-form-item__label {
+        width: 100% !important;
+        text-align: left;
+        padding-bottom: 4px;
+      }
+
+      .el-form-item__content {
+        margin-left: 0 !important;
+      }
+    }
+
+    // Adjust model select row
+    .model-select {
+      flex-wrap: wrap;
+      gap: 8px;
+
+      .el-select,
+      .el-input {
+        flex: 1 1 100% !important;
+      }
+
+      .el-button {
+        margin-left: 0 !important;
+      }
+    }
+
+    // Adjust prompts header
+    .prompts-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    // Adjust sync actions
+    .sync-actions {
+      flex-direction: column;
+
+      .el-button {
+        width: 100%;
+      }
+    }
+
+    // Adjust conflict buttons
+    .conflict-buttons {
+      flex-wrap: wrap;
+
+      .el-button {
+        flex: 1;
+        min-width: 80px;
+      }
+    }
+
+    // Form tip on new line
+    .form-tip {
+      display: block;
+      margin-left: 0;
+      margin-top: 4px;
+    }
   }
 }
 </style>

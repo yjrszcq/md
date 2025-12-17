@@ -177,14 +177,17 @@
     </div>
 
     <!-- 底部输入区 -->
-    <div class="input-area">
+    <div class="input-area" :style="{ height: inputAreaHeight + 'px' }">
+      <!-- 拖拽调整高度手柄 -->
+      <div class="input-resize-handle" @mousedown="startInputResize" @touchstart="startInputResize"></div>
       <el-input
         v-model="inputText"
         type="textarea"
-        :rows="3"
+        :autosize="false"
         :placeholder="inputPlaceholder"
         @keydown="handleKeydown"
         :disabled="sending"
+        class="resizable-textarea"
       />
       <div class="input-actions">
         <div class="input-left">
@@ -790,6 +793,71 @@ const stopResize = () => {
   document.removeEventListener("mousemove", doResize);
   document.removeEventListener("mouseup", stopResize);
 };
+
+// Input area height resize
+const MIN_INPUT_HEIGHT_DEFAULT = 140;
+const MIN_INPUT_HEIGHT_LANDSCAPE = 80;
+const MAX_INPUT_HEIGHT_DEFAULT = 400;
+const inputAreaHeight = ref(MIN_INPUT_HEIGHT_DEFAULT);
+let isInputResizing = false;
+let inputStartY = 0;
+let inputStartHeight = 0;
+
+// Get min height based on screen orientation
+const getMinInputHeight = () => {
+  // Landscape mode on mobile: height < width and height is small
+  if (window.innerHeight < window.innerWidth && window.innerHeight < 500) {
+    return MIN_INPUT_HEIGHT_LANDSCAPE;
+  }
+  return MIN_INPUT_HEIGHT_DEFAULT;
+};
+
+// Get max height based on available space (leave room for header and task blocks)
+const getMaxInputHeight = () => {
+  const isLandscapeMobile = window.innerHeight < window.innerWidth && window.innerHeight < 500;
+
+  if (isLandscapeMobile) {
+    // Landscape mobile: strict max height to prevent overflow
+    // Available = viewport height - header(50) - sidebar header(~50) - conversation bar(~45) - minimum content space(50)
+    const maxForLandscape = window.innerHeight - 50 - 145;
+    return Math.max(MIN_INPUT_HEIGHT_LANDSCAPE, Math.min(maxForLandscape, 200));
+  }
+
+  // Normal mode
+  const availableHeight = window.innerHeight - 50 - 100;
+  return Math.min(MAX_INPUT_HEIGHT_DEFAULT, Math.max(availableHeight, getMinInputHeight() + 50));
+};
+
+const startInputResize = (e: MouseEvent | TouchEvent) => {
+  isInputResizing = true;
+  const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+  inputStartY = clientY;
+  inputStartHeight = inputAreaHeight.value;
+  document.addEventListener("mousemove", doInputResize);
+  document.addEventListener("mouseup", stopInputResize);
+  document.addEventListener("touchmove", doInputResize, { passive: false });
+  document.addEventListener("touchend", stopInputResize);
+  e.preventDefault();
+};
+
+const doInputResize = (e: MouseEvent | TouchEvent) => {
+  if (!isInputResizing) return;
+  e.preventDefault();
+  const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+  const diff = inputStartY - clientY;
+  const minHeight = getMinInputHeight();
+  const maxHeight = getMaxInputHeight();
+  const newHeight = Math.max(minHeight, Math.min(maxHeight, inputStartHeight + diff));
+  inputAreaHeight.value = newHeight;
+};
+
+const stopInputResize = () => {
+  isInputResizing = false;
+  document.removeEventListener("mousemove", doInputResize);
+  document.removeEventListener("mouseup", stopInputResize);
+  document.removeEventListener("touchmove", doInputResize);
+  document.removeEventListener("touchend", stopInputResize);
+};
 </script>
 
 <style lang="scss" scoped>
@@ -801,6 +869,7 @@ const stopResize = () => {
   flex-direction: column;
   position: relative;
   transition: margin-right 0.3s;
+  overflow: hidden;
 
   &.hidden {
     display: none;
@@ -1142,14 +1211,62 @@ const stopResize = () => {
 
 .input-area {
   padding: 16px;
+  padding-top: 20px;
   border-top: 1px solid #e4e7ed;
   flex-shrink: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
+
+  .input-resize-handle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 12px;
+    cursor: ns-resize;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &::before {
+      content: "";
+      width: 40px;
+      height: 4px;
+      background: #dcdfe6;
+      border-radius: 2px;
+      transition: background 0.2s;
+    }
+
+    &:hover::before {
+      background: #409eff;
+    }
+  }
+
+  .resizable-textarea {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+
+    :deep(.el-textarea) {
+      height: 100%;
+    }
+
+    :deep(.el-textarea__inner) {
+      height: 100% !important;
+      min-height: 0 !important;
+      resize: none;
+    }
+  }
 
   .input-actions {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-top: 10px;
+    flex-shrink: 0;
 
     .input-left {
       display: flex;
@@ -1168,6 +1285,46 @@ const stopResize = () => {
         color: #909399;
       }
     }
+  }
+}
+
+// Portrait mode on mobile: full screen overlay below header
+@media (max-width: 720px) {
+  .ai-sidebar {
+    position: fixed;
+    top: 50px;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100% !important;
+    height: calc(100% - 50px);
+    z-index: 1000;
+    border-left: none;
+  }
+
+  .resize-handle {
+    display: none;
+  }
+
+  .input-area {
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+}
+
+// Landscape mode on tablet/small screens: fixed sidebar with dynamic width
+@media (min-width: 721px) and (max-width: 1024px) {
+  .ai-sidebar {
+    position: fixed;
+    top: 50px;
+    right: 0;
+    bottom: 0;
+    width: min(380px, 50vw) !important;
+    height: calc(100% - 50px);
+    z-index: 1000;
+  }
+
+  .resize-handle {
+    display: none;
   }
 }
 </style>
