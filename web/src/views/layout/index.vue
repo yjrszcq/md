@@ -53,6 +53,7 @@ import AiConfigDialog from "@/components/ai-config-dialog/index.vue";
 import Token from "@/store/token";
 import TokenApi from "@/api/token";
 import UserApi from "@/api/user";
+import AIApi from "@/api/ai";
 import router from "@/router";
 import DocCache from "@/store/doc-cache";
 import AIConfigStore from "@/store/ai-config";
@@ -72,8 +73,31 @@ const handleOpenAiConfig = () => {
   aiConfigVisible.value = true;
 };
 
+// Sync AI config from server on page load/refresh
+const syncAiConfigFromServer = async () => {
+  try {
+    const serverRes = await AIApi.getConfigFull();
+    const serverConfig = serverRes.data;
+    const localConfig = await AIConfigStore.getConfig();
+
+    if (serverConfig && serverConfig.syncEnabled) {
+      // Server sync is enabled, update local config
+      await AIConfigStore.setConfig(serverConfig);
+      window.dispatchEvent(new CustomEvent("ai-config-changed", { detail: serverConfig }));
+    } else if (localConfig.syncEnabled && (!serverConfig || !serverConfig.syncEnabled)) {
+      // Server sync is disabled but local is enabled, disable local sync
+      localConfig.syncEnabled = false;
+      await AIConfigStore.setConfig(localConfig);
+      window.dispatchEvent(new CustomEvent("ai-config-changed", { detail: localConfig }));
+    }
+  } catch {
+    // Ignore errors, server might not have config yet
+  }
+};
+
 onMounted(() => {
   window.addEventListener("open-ai-config", handleOpenAiConfig);
+  syncAiConfigFromServer();
 });
 
 onUnmounted(() => {
