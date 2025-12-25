@@ -190,7 +190,7 @@ const deleteBookClick = (book: Book) => {
   height: 100%;
   min-width: 220px;
   width: 220px;
-  background: #404040;
+  background: var(--book-sidebar-bg);
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
@@ -203,13 +203,13 @@ const deleteBookClick = (book: Book) => {
   }
   .create-button {
     height: 60px;
-    border-bottom: 1px solid #555 !important;
+    border-bottom: 1px solid var(--border-dark) !important;
   }
   .el-button--large [class*="el-icon"] + span {
     margin-left: 3px;
   }
   .scroll-view {
-    color: #f2f2f2;
+    color: var(--book-sidebar-text);
     font-size: 13px;
     .item-view {
       display: flex;
@@ -217,32 +217,32 @@ const deleteBookClick = (book: Book) => {
       justify-content: space-between;
       padding: 18px 15px;
       cursor: pointer;
-      border-left: 3px #404040 solid;
+      border-left: 3px var(--book-sidebar-border) solid;
       transition: 0.05s;
-      border-bottom: 1px solid #555;
+      border-bottom: 1px solid var(--border-dark);
       .update-view {
         display: flex;
         align-items: center;
       }
     }
     .item-view:hover {
-      background: #666;
-      border-left-color: #666;
+      background: var(--book-sidebar-selected);
+      border-left-color: var(--book-sidebar-selected);
     }
     .item-view.selected {
-      background: #666;
+      background: var(--book-sidebar-selected);
       border-left-color: #e6a23c;
     }
     .setting-button {
       margin-left: 10px;
-      color: #f2f2f2;
+      color: var(--book-sidebar-text);
     }
     .setting-button:hover {
-      color: #ccc;
+      color: var(--text-tertiary);
     }
   }
   .el-loading-mask {
-    background: #404040;
+    background: var(--loading-mask-book);
   }
 }
 .page-book-shrink {

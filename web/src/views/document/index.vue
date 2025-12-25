@@ -266,13 +266,14 @@ const openAiConfig = () => {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    border: #e6e6e6 1px solid;
+    border: var(--editor-toolbar-border) 1px solid;
     border-bottom: none;
     padding-right: 10px;
+    background-color: var(--editor-toolbar-bg);
     .icon-outer {
       width: 30px;
       height: 24px;
-      color: #3f4a54;
+      color: var(--editor-toolbar-icon);
       cursor: pointer;
       .icon-save {
         width: 16px;
@@ -286,7 +287,7 @@ const openAiConfig = () => {
       }
     }
     .icon-outer:hover {
-      background: #f6f6f6;
+      background: var(--editor-toolbar-hover);
     }
   }
   .codemirror-inner {

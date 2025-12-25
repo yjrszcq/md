@@ -20,6 +20,7 @@
         <div class="text-view">{{ name }}</div>
         <template #dropdown>
           <el-dropdown-menu>
+            <el-dropdown-item style="user-select: none" @click="toggleTheme">{{ themeLabel }}</el-dropdown-item>
             <el-dropdown-item style="user-select: none" @click="publishClick">公开文档</el-dropdown-item>
             <el-dropdown-item style="user-select: none" @click="dialogVisible = true">修改密码</el-dropdown-item>
             <el-dropdown-item style="user-select: none" @click="logout">退出登录</el-dropdown-item>
@@ -57,6 +58,7 @@ import AIApi from "@/api/ai";
 import router from "@/router";
 import DocCache from "@/store/doc-cache";
 import AIConfigStore from "@/store/ai-config";
+import ThemeStore, { type ThemeMode } from "@/store/theme";
 
 const hostUrl = ref(location.origin);
 const name = ref(Token.getName());
@@ -67,6 +69,11 @@ const form = ref({ password: "", newPassword: "", confirmPassword: "" });
 const onlyPreview = ref(true);
 const isStretch = ref(true);
 const isDocument = ref(router.currentRoute.value.name === "document");
+
+// Theme state
+const themeMode = ref<ThemeMode>(ThemeStore.getStoredTheme());
+const themeLabel = ref(ThemeStore.getThemeLabel(themeMode.value));
+let removeSystemThemeListener: (() => void) | null = null;
 
 // Listen for open-ai-config event from ai-sidebar
 const handleOpenAiConfig = () => {
@@ -98,10 +105,20 @@ const syncAiConfigFromServer = async () => {
 onMounted(() => {
   window.addEventListener("open-ai-config", handleOpenAiConfig);
   syncAiConfigFromServer();
+
+  // Setup system theme listener for auto-switching when in system mode
+  removeSystemThemeListener = ThemeStore.setupSystemThemeListener(() => {
+    if (themeMode.value === "system") {
+      ThemeStore.applyTheme("system");
+    }
+  });
 });
 
 onUnmounted(() => {
   window.removeEventListener("open-ai-config", handleOpenAiConfig);
+  if (removeSystemThemeListener) {
+    removeSystemThemeListener();
+  }
 });
 
 watch(
@@ -198,6 +215,16 @@ const publishClick = () => {
 };
 
 /**
+ * Toggle theme mode: system -> light -> dark -> system
+ */
+const toggleTheme = () => {
+  themeMode.value = ThemeStore.cycleTheme(themeMode.value);
+  themeLabel.value = ThemeStore.getThemeLabel(themeMode.value);
+  ThemeStore.setStoredTheme(themeMode.value);
+  ThemeStore.applyTheme(themeMode.value);
+};
+
+/**
  * AI 配置变化
  */
 const onAiConfigChanged = (config: AIConfig) => {
@@ -215,6 +242,7 @@ const onAiConfigChanged = (config: AIConfig) => {
   right: 0;
   top: 0;
   bottom: 0;
+  background-color: var(--bg-primary);
 }
 .top-view {
   height: 49px;
@@ -222,9 +250,10 @@ const onAiConfigChanged = (config: AIConfig) => {
   justify-content: space-between;
   align-items: center;
   user-select: none;
-  border-bottom: 1px #eee solid;
+  border-bottom: 1px var(--header-border) solid;
   padding: 0 2%;
   white-space: nowrap;
+  background-color: var(--header-bg);
   .left-view {
     display: flex;
     align-items: center;
@@ -235,6 +264,7 @@ const onAiConfigChanged = (config: AIConfig) => {
       font-weight: bold;
       display: flex;
       align-items: center;
+      color: var(--text-primary);
     }
     .menu-view {
       margin-left: 2%;
@@ -244,7 +274,7 @@ const onAiConfigChanged = (config: AIConfig) => {
       font-size: 14px;
       a {
         text-decoration: none;
-        color: #303133;
+        color: var(--text-primary);
         height: 100%;
         display: flex;
         align-items: center;
@@ -273,7 +303,7 @@ const onAiConfigChanged = (config: AIConfig) => {
       cursor: pointer;
       padding: 0 20px;
       transition: all 0.3s;
-      color: #303133;
+      color: var(--text-primary);
       outline: none;
     }
     .text-view:hover {
@@ -285,6 +315,6 @@ const onAiConfigChanged = (config: AIConfig) => {
   width: 100%;
   height: calc(100% - 50px);
   overflow: auto;
-  background-color: #fcfcfc;
+  background-color: var(--content-bg);
 }
 </style>

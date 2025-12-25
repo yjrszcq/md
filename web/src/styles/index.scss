@@ -1,4 +1,5 @@
 @use "./element-theme.scss";
+@use "./theme.scss";
 
 .fade-enter-active {
   transition: opacity 0.5s;

@@ -17,7 +17,16 @@
   }
   .catalog-view {
     width: 200px;
-    background-color: #fcfcfc;
+    background-color: var(--content-bg);
+  }
+}
+
+// Dark theme for preview-only mode
+[data-theme="dark"] {
+  .md-preview_component {
+    .preview-view {
+      background-color: var(--bg-secondary);
+    }
   }
 }
 
@@ -36,4 +45,275 @@
 }
 .md-editor-code pre {
   margin: 0;
+}
+
+// Dark theme enhancements for md-editor-v3
+[data-theme="dark"] {
+  // Text selection color
+  .md-editor-preview ::selection {
+    background-color: rgba(200, 160, 80, 0.35);
+  }
+
+  // Force override cyanosis theme - only in preview area
+  .md-editor-preview.cyanosis-theme,
+  .md-editor .md-editor-preview.cyanosis-theme,
+  .md-editor-dark .md-editor-preview.cyanosis-theme {
+    // Don't set color here - it breaks code highlighting
+
+    h1, h2, h3, h4, h5, h6 {
+      color: #d4d4d4 !important;
+      border-color: #333333 !important;
+
+      &::before, &::after {
+        color: #e6c07b !important;
+      }
+    }
+
+    a:not(pre a):not(.md-editor-code-copy) {
+      color: #e6c07b !important;
+      border-bottom-color: #333333 !important;
+    }
+    a:not(pre a):not(.md-editor-code-copy):hover {
+      color: #f0d090 !important;
+    }
+    a:not(pre a):not(.md-editor-code-copy)::after {
+      border-bottom-color: #e6c07b !important;
+    }
+
+    // Only in preview, not in code blocks
+    & > strong, & > b,
+    p strong, p b,
+    li strong, li b,
+    td strong, td b,
+    blockquote strong, blockquote b {
+      color: #d4a656 !important;
+    }
+
+    & > em, & > i,
+    p em, p i,
+    li em, li i {
+      color: #d4d4d4 !important;
+    }
+  }
+
+  // Also target md-editor-dark class directly - preview only
+  .md-editor-dark .md-editor-preview {
+    // Don't set color here - it breaks code highlighting
+
+    h1, h2, h3, h4, h5, h6 {
+      color: #e6c07b !important;
+    }
+
+    // Only in preview content, not in code blocks
+    p strong, p b,
+    li strong, li b,
+    td strong, td b {
+      color: #d4a656 !important;
+    }
+
+    a:not(pre a):not(.md-editor-code-copy) {
+      color: #e6c07b !important;
+    }
+  }
+
+  // Also target generic preview class
+  .md-editor-preview {
+    // Set color only on specific content elements, not globally
+
+    // Only apply to non-code-block elements
+    & > p, & > ul > li, & > ol > li, & > dl > dd, & > dl > dt,
+    & > table td, & > table th,
+    & > blockquote p, & > blockquote {
+      color: #d4d4d4 !important;
+    }
+
+    // Bold text should be darker yellow - only in content, not code blocks
+    p strong, p b,
+    li strong, li b,
+    td strong, td b,
+    blockquote strong, blockquote b {
+      color: #d4a656 !important;
+    }
+
+    // Links should be yellow/gold (but not in code blocks)
+    a:not(pre a):not(.md-editor-code-copy) {
+      color: #e6c07b !important;
+    }
+    a:not(pre a):not(.md-editor-code-copy):hover {
+      color: #f0d090 !important;
+    }
+
+    // Restore cyanosis-style heading decorations for dark mode
+    h1 {
+      color: #e6c07b !important;
+      padding-bottom: 4px;
+      margin-top: 36px;
+      margin-bottom: 10px;
+      font-size: 30px;
+      line-height: 1.5;
+    }
+
+    h2 {
+      position: relative;
+      color: #e6c07b !important;
+      padding-left: 10px;
+      padding-right: 10px;
+      padding-bottom: 10px;
+      margin-top: 36px;
+      margin-bottom: 10px;
+      font-size: 24px;
+      line-height: 1.5;
+      border-bottom: 1px solid #333333;
+
+      &::before {
+        content: "「";
+        position: absolute;
+        top: -6px;
+        left: -14px;
+        color: #e6c07b;
+      }
+
+      &::after {
+        content: "」";
+        position: relative;
+        top: 6px;
+        right: auto;
+        color: #e6c07b;
+      }
+    }
+
+    h3 {
+      position: relative;
+      color: #e6c07b !important;
+      padding-bottom: 0;
+      margin-top: 30px;
+      margin-bottom: 10px;
+      font-size: 20px;
+      line-height: 1.5;
+      padding-left: 6px;
+
+      &::before {
+        content: "»";
+        padding-right: 6px;
+        color: #d4a656;
+      }
+    }
+
+    h4, h5, h6 {
+      color: #e6c07b !important;
+    }
+  }
+
+  // Make catalog background consistent
+  .md-editor-catalog {
+    background-color: var(--content-bg);
+  }
+
+  // Catalog link colors in dark mode
+  .md-editor-catalog-link {
+    // Only style the direct span child, not nested catalog links
+    > span {
+      color: #d4d4d4 !important;
+    }
+    &:hover > span {
+      color: #e6c07b !important;
+    }
+  }
+
+  .md-editor-catalog-active > span {
+    color: #e6c07b !important;
+  }
+
+  // Ensure preview wrapper has correct background
+  .md-editor-preview-wrapper {
+    background-color: var(--bg-secondary);
+  }
+
+  // Code block syntax highlighting in preview area only
+  // Use .md-editor-preview-wrapper to ensure we only target the actual preview panel
+  .md-editor-preview-wrapper .md-editor-preview pre code {
+    color: #abb2bf !important;
+
+    // Atom One Dark syntax highlighting colors
+    .hljs-keyword { color: #c678dd !important; }
+    .hljs-string { color: #e5c07b !important; }
+    .hljs-number { color: #d19a66 !important; }
+    .hljs-function { color: #61afef !important; }
+    .hljs-title { color: #61afef !important; }
+    .hljs-params { color: #abb2bf !important; }
+    .hljs-comment { color: #5c6370 !important; }
+    .hljs-doctag { color: #c678dd !important; }
+    .hljs-meta { color: #61afef !important; }
+    .hljs-attr { color: #d19a66 !important; }
+    .hljs-attribute { color: #98c379 !important; }
+    .hljs-builtin-name { color: #d19a66 !important; }
+    .hljs-name { color: #e06c75 !important; }
+    .hljs-tag { color: #e06c75 !important; }
+    .hljs-variable { color: #e06c75 !important; }
+    .hljs-template-variable { color: #e06c75 !important; }
+    .hljs-regexp { color: #98c379 !important; }
+    .hljs-link { color: #98c379 !important; }
+    .hljs-symbol { color: #56b6c2 !important; }
+    .hljs-bullet { color: #d19a66 !important; }
+    .hljs-built_in { color: #d19a66 !important; }
+    .hljs-type { color: #e6c07b !important; }
+    .hljs-class { color: #e6c07b !important; }
+    .hljs-literal { color: #56b6c2 !important; }
+  }
+
+  // Inline code styling (backtick wrapped text)
+  .md-editor-preview code:not(pre code) {
+    background-color: #3d3520 !important;
+    color: #e6c07b !important;
+  }
+
+  // Blockquote styling
+  .md-editor-preview blockquote {
+    border-left-color: var(--border-light);
+    background-color: var(--bg-hover);
+  }
+
+  // Table styling - match cyanosis theme scaling
+  .md-editor-preview table {
+    border-collapse: collapse;
+    border-color: var(--border-primary);
+  }
+
+  .md-editor-preview th,
+  .md-editor-preview td {
+    padding: 14px 40px 14px 16px;
+    border-color: var(--border-primary);
+    text-align: left;
+  }
+
+  .md-editor-preview th {
+    background-color: var(--bg-hover);
+  }
+
+  .md-editor-preview tr:nth-child(2n) {
+    background-color: var(--bg-tertiary);
+  }
+
+  // Editor input area - ensure CodeMirror has correct background
+  .md-editor {
+    .cm-editor {
+      background-color: var(--bg-primary);
+    }
+    .cm-gutters {
+      background-color: var(--bg-tertiary);
+      border-color: var(--border-primary);
+    }
+    .cm-activeLineGutter {
+      background-color: var(--bg-hover);
+    }
+    .cm-activeLine {
+      background-color: var(--bg-hover);
+    }
+  }
+
+  // Editor toolbar and footer - lighter background
+  .md-editor-toolbar-wrapper,
+  .md-editor-footer {
+    background-color: var(--bg-tertiary) !important;
+  }
 }

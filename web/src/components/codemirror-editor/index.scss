@@ -2,12 +2,26 @@
   .cm-editor {
     font-size: 14px;
     height: 100%;
-    border: 1px solid #e6e6e6;
+    border: 1px solid var(--editor-toolbar-border);
     border-radius: 6px;
     overflow: hidden;
     outline: none;
+    background-color: var(--bg-primary);
     .cm-scroller {
       font-family: source-code-pro, Menlo, Monaco, Consolas, Courier New, monospace;
+    }
+    .cm-gutters {
+      background-color: var(--bg-tertiary);
+      border-color: var(--border-primary);
+    }
+    .cm-activeLineGutter {
+      background-color: var(--bg-hover);
+    }
+    .cm-activeLine {
+      background-color: var(--bg-hover);
+    }
+    .cm-cursor {
+      border-color: var(--text-primary);
     }
   }
 }
@@ -15,5 +29,18 @@
 .v-codemirror.no-radius {
   .cm-editor {
     border-radius: 0;
+  }
+}
+
+// Dark mode specific overrides for CodeMirror
+[data-theme="dark"] {
+  .v-codemirror .cm-editor {
+    .cm-selectionBackground {
+      background-color: rgba(0, 148, 193, 0.3) !important;
+    }
+    .cm-matchingBracket {
+      background-color: rgba(0, 148, 193, 0.4);
+      color: inherit;
+    }
   }
 }

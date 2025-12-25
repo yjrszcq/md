@@ -906,8 +906,8 @@ const stopInputResize = () => {
 <style lang="scss" scoped>
 .ai-sidebar {
   height: 100%;
-  border-left: 1px solid #e4e7ed;
-  background: #fff;
+  border-left: 1px solid var(--border-primary);
+  background: var(--ai-sidebar-bg);
   display: flex;
   flex-direction: column;
   position: relative;
@@ -939,7 +939,7 @@ const stopInputResize = () => {
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  border-bottom: 1px solid #e4e7ed;
+  border-bottom: 1px solid var(--border-primary);
   flex-shrink: 0;
 
   .header-left {
@@ -952,7 +952,7 @@ const stopInputResize = () => {
       padding: 4px 8px;
       font-size: 14px;
       font-weight: 500;
-      color: #303133;
+      color: var(--text-primary);
       justify-content: flex-start;
 
       :deep(span) {
@@ -991,7 +991,7 @@ const stopInputResize = () => {
   align-items: center;
   padding: 8px 16px;
   gap: 8px;
-  border-bottom: 1px solid #e4e7ed;
+  border-bottom: 1px solid var(--border-primary);
   flex-shrink: 0;
 
   &.search-mode {
@@ -1011,8 +1011,8 @@ const stopInputResize = () => {
 .search-results {
   max-height: 300px;
   overflow-y: auto;
-  border-bottom: 1px solid #e4e7ed;
-  background: #fff;
+  border-bottom: 1px solid var(--border-primary);
+  background: var(--ai-sidebar-bg);
 
   .search-result-item {
     display: flex;
@@ -1023,11 +1023,11 @@ const stopInputResize = () => {
     transition: background 0.15s;
 
     &:hover {
-      background: #f5f7fa;
+      background: var(--bg-hover);
     }
 
     &.is-current {
-      background: #ecf5ff;
+      background: var(--ai-search-current-bg);
     }
 
     .conv-title {
@@ -1037,12 +1037,12 @@ const stopInputResize = () => {
       text-overflow: ellipsis;
       white-space: nowrap;
       font-size: 14px;
-      color: #303133;
+      color: var(--text-primary);
     }
 
     .conv-time {
       font-size: 12px;
-      color: #909399;
+      color: var(--text-tertiary);
       margin-left: 12px;
       flex-shrink: 0;
     }
@@ -1051,7 +1051,7 @@ const stopInputResize = () => {
   .search-empty {
     padding: 20px 16px;
     text-align: center;
-    color: #909399;
+    color: var(--text-tertiary);
     font-size: 14px;
   }
 }
@@ -1065,7 +1065,7 @@ const stopInputResize = () => {
 .task-block {
   margin-bottom: 20px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #ebeef5;
+  border-bottom: 1px solid var(--border-secondary);
 
   &:last-child {
     border-bottom: none;
@@ -1075,7 +1075,7 @@ const stopInputResize = () => {
 .task-label {
   font-size: 12px;
   font-weight: 500;
-  color: #909399;
+  color: var(--text-tertiary);
   margin-bottom: 6px;
   text-transform: uppercase;
 }
@@ -1095,7 +1095,7 @@ const stopInputResize = () => {
 
     .delete-task-btn {
       padding: 2px 4px;
-      color: #909399;
+      color: var(--text-tertiary);
 
       &:hover {
         color: #f56c6c;
@@ -1104,18 +1104,19 @@ const stopInputResize = () => {
   }
 
   .task-content {
-    background: #f5f7fa;
+    background: var(--ai-user-task-bg);
     padding: 10px 12px;
     border-radius: 6px;
     font-size: 14px;
     line-height: 1.6;
     white-space: pre-wrap;
+    color: var(--text-primary);
   }
 }
 
 .reasoning-section {
   margin-bottom: 12px;
-  border: 1px solid #e4e7ed;
+  border: 1px solid var(--border-primary);
   border-radius: 6px;
   overflow: hidden;
 
@@ -1124,17 +1125,17 @@ const stopInputResize = () => {
     align-items: center;
     gap: 8px;
     padding: 10px 12px;
-    background: #fafafa;
+    background: var(--ai-reasoning-bg);
     cursor: pointer;
     user-select: none;
 
     &:hover {
-      background: #f5f7fa;
+      background: var(--ai-reasoning-hover);
     }
 
     .el-icon {
       transition: transform 0.2s;
-      color: #909399;
+      color: var(--text-tertiary);
 
       &.is-expanded {
         transform: rotate(90deg);
@@ -1144,25 +1145,25 @@ const stopInputResize = () => {
     .reasoning-title {
       font-size: 13px;
       font-weight: 500;
-      color: #606266;
+      color: var(--text-secondary);
     }
 
     .reasoning-hint {
       font-size: 12px;
-      color: #c0c4cc;
+      color: var(--text-placeholder);
       margin-left: auto;
     }
   }
 
   .reasoning-content {
     padding: 12px;
-    background: #fff;
-    border-top: 1px solid #e4e7ed;
+    background: var(--ai-sidebar-bg);
+    border-top: 1px solid var(--border-primary);
 
     pre {
       margin: 0;
       font-size: 13px;
-      color: #909399;
+      color: var(--text-tertiary);
       line-height: 1.6;
       white-space: pre-wrap;
       word-break: break-word;
@@ -1186,7 +1187,7 @@ const stopInputResize = () => {
 
     .copy-output-btn {
       padding: 2px 4px;
-      color: #909399;
+      color: var(--text-tertiary);
 
       &:hover {
         color: #409eff;
@@ -1197,16 +1198,17 @@ const stopInputResize = () => {
   .output-content {
     font-size: 14px;
     line-height: 1.8;
+    color: var(--text-primary);
 
     :deep(pre) {
-      background: #f5f7fa;
+      background: var(--code-bg);
       padding: 12px;
       border-radius: 4px;
       overflow-x: auto;
     }
 
     :deep(code) {
-      background: #f5f7fa;
+      background: var(--code-bg);
       padding: 2px 6px;
       border-radius: 3px;
       font-size: 13px;
@@ -1237,7 +1239,7 @@ const stopInputResize = () => {
   padding: 10px;
   border-radius: 4px;
   font-size: 13px;
-  background: #fff2f0;
+  background: var(--ai-error-bg);
   color: #ff4d4f;
 
   .el-icon {
@@ -1255,7 +1257,7 @@ const stopInputResize = () => {
 .input-area {
   padding: 16px;
   padding-top: 20px;
-  border-top: 1px solid #e4e7ed;
+  border-top: 1px solid var(--border-primary);
   flex-shrink: 0;
   position: relative;
   display: flex;
@@ -1278,7 +1280,7 @@ const stopInputResize = () => {
       content: "";
       width: 40px;
       height: 4px;
-      background: #dcdfe6;
+      background: var(--border-primary);
       border-radius: 2px;
       transition: background 0.2s;
     }
@@ -1319,13 +1321,13 @@ const stopInputResize = () => {
 
     .input-tip {
       font-size: 12px;
-      color: #909399;
+      color: var(--text-tertiary);
     }
 
     .auto-scroll-checkbox {
       :deep(.el-checkbox__label) {
         font-size: 12px;
-        color: #909399;
+        color: var(--text-tertiary);
       }
     }
   }
@@ -1377,7 +1379,7 @@ const stopInputResize = () => {
       transform: translateY(-50%);
       width: 4px;
       height: 40px;
-      background: #dcdfe6;
+      background: var(--border-primary);
       border-radius: 2px;
       transition: background 0.2s;
     }
@@ -1409,7 +1411,7 @@ const stopInputResize = () => {
 
   .conv-time {
     font-size: 11px;
-    color: #909399;
+    color: var(--text-tertiary);
     flex-shrink: 0;
     text-align: right;
   }

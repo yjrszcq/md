@@ -1,4 +1,4 @@
-import { defineComponent, Fragment } from "vue";
+import { defineComponent, Fragment, ref, onMounted, onUnmounted, computed } from "vue";
 import { MdEditor, NormalToolbar } from "md-editor-v3";
 import "md-editor-v3/lib/style.css";
 import { generateId } from "./config";
@@ -9,6 +9,29 @@ export default defineComponent({
   name: "MdEditor",
   emits: ["export", "aiToggle"],
   setup(props, { emit }) {
+    const isDark = ref(document.documentElement.getAttribute("data-theme") === "dark");
+
+    // Watch for theme changes
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === "data-theme") {
+          isDark.value = document.documentElement.getAttribute("data-theme") === "dark";
+        }
+      });
+    });
+
+    onMounted(() => {
+      observer.observe(document.documentElement, { attributes: true });
+    });
+
+    onUnmounted(() => {
+      observer.disconnect();
+    });
+
+    const theme = computed(() => (isDark.value ? "dark" : "light"));
+    const codeTheme = computed(() => (isDark.value ? "atom" : "github"));
+    const previewTheme = computed(() => (isDark.value ? "default" : "cyanosis"));
+
     const exportClick = () => {
       emit("export");
     };
@@ -51,8 +74,9 @@ export default defineComponent({
             "catalog",
             1,
           ]}
-          previewTheme="cyanosis"
-          codeTheme="github"
+          theme={theme.value}
+          previewTheme={previewTheme.value}
+          codeTheme={codeTheme.value}
           showCodeRowNumber
           mdHeadingId={generateId}
           noMermaid

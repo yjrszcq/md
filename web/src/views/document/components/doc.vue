@@ -416,7 +416,7 @@ defineExpose({ saveDoc });
   height: 100%;
   min-width: 260px;
   width: 260px;
-  background: #fafafa;
+  background: var(--doc-sidebar-bg);
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
@@ -430,13 +430,13 @@ defineExpose({ saveDoc });
   }
   .create-button {
     height: 60px;
-    border-bottom: 1px solid #e6e6e6 !important;
+    border-bottom: 1px solid var(--border-tertiary) !important;
   }
   .el-button--large [class*="el-icon"] + span {
     margin-left: 3px;
   }
   .scroll-view {
-    color: #595959;
+    color: var(--doc-sidebar-text);
     font-size: 13px;
     .item-view {
       display: flex;
@@ -444,9 +444,9 @@ defineExpose({ saveDoc });
       justify-content: space-between;
       padding: 18px 15px;
       cursor: pointer;
-      border-left: 3px #fafafa solid;
+      border-left: 3px var(--doc-sidebar-border) solid;
       transition: 0.05s;
-      border-bottom: 1px solid #eaeaea;
+      border-bottom: 1px solid var(--border-tertiary);
       position: relative;
       .update-view {
         display: flex;
@@ -457,7 +457,7 @@ defineExpose({ saveDoc });
         font-size: 12px;
         bottom: 3px;
         right: 20px;
-        color: #ccc;
+        color: var(--text-tertiary);
       }
       .published-view {
         position: absolute;
@@ -470,23 +470,23 @@ defineExpose({ saveDoc });
       }
     }
     .item-view:hover {
-      background: #e6e6e6;
-      border-left-color: #e6e6e6;
+      background: var(--doc-sidebar-selected);
+      border-left-color: var(--doc-sidebar-selected);
     }
     .item-view.selected {
-      background: #e6e6e6;
+      background: var(--doc-sidebar-selected);
       border-left-color: #0094c1;
     }
     .setting-button {
       margin-left: 10px;
-      color: #595959;
+      color: var(--doc-sidebar-text);
     }
     .setting-button:hover {
-      color: #777;
+      color: var(--text-tertiary);
     }
   }
   .el-loading-mask {
-    background: #fafafa;
+    background: var(--loading-mask-sidebar);
   }
 }
 .page-doc-shrink {

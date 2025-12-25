@@ -1,6 +1,6 @@
 import { config } from "md-editor-v3";
 import highlight from "highlight.js";
-import "highlight.js/styles/github.css";
+// Removed fixed github.css import - let md-editor-v3 manage code theme via codeTheme prop
 import prettier from "prettier";
 import parserMarkdown from "prettier/parser-markdown";
 import cropper from "cropperjs";

@@ -199,4 +199,21 @@ const publishClick = () => {
     z-index: -1;
   }
 }
+
+// Dark theme
+[data-theme="dark"] {
+  .page-login {
+    background: #1a1a1a;
+
+    .title-view {
+      color: #d4d4d4;
+    }
+
+    .content-view {
+      background: rgba(30, 30, 30, 0.8);
+      border: 1px solid #333333;
+      border-radius: 8px;
+    }
+  }
+}
 </style>

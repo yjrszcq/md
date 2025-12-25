@@ -209,10 +209,11 @@ const hrefClick = (id: string) => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  background-color: var(--bg-secondary);
   .title-view {
     margin: 10px 0;
     font-size: 18px;
-    color: #5f5f5f;
+    color: var(--text-secondary);
     font-weight: bold;
     user-select: none;
   }

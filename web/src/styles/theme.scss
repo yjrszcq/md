@@ -1,0 +1,231 @@
+// Theme CSS variables
+// Light theme is the default
+
+:root {
+  // Background colors
+  --bg-primary: #ffffff;
+  --bg-secondary: #fcfcfc;
+  --bg-tertiary: #fafafa;
+  --bg-hover: #f5f7fa;
+  --bg-active: #e6e6e6;
+  --bg-sidebar-dark: #404040;
+  --bg-sidebar-dark-hover: #666;
+
+  // Text colors
+  --text-primary: #303133;
+  --text-secondary: #606266;
+  --text-tertiary: #909399;
+  --text-placeholder: #c0c4cc;
+  --text-light: #f2f2f2;
+
+  // Border colors
+  --border-primary: #e4e7ed;
+  --border-secondary: #ebeef5;
+  --border-tertiary: #eaeaea;
+  --border-light: #e6e6e6;
+  --border-dark: #555;
+
+  // Component specific
+  --header-bg: #ffffff;
+  --header-border: #eee;
+  --content-bg: #fcfcfc;
+  --doc-sidebar-bg: #fafafa;
+  --doc-sidebar-border: #fafafa;
+  --doc-sidebar-selected: #e6e6e6;
+  --doc-sidebar-text: #595959;
+  --book-sidebar-bg: #404040;
+  --book-sidebar-border: #404040;
+  --book-sidebar-selected: #666;
+  --book-sidebar-text: #f2f2f2;
+
+  // Editor / Code
+  --code-bg: #f5f7fa;
+  --editor-toolbar-bg: #ffffff;
+  --editor-toolbar-border: #e6e6e6;
+  --editor-toolbar-icon: #3f4a54;
+  --editor-toolbar-hover: #f6f6f6;
+
+  // AI Sidebar
+  --ai-sidebar-bg: #ffffff;
+  --ai-user-task-bg: #f5f7fa;
+  --ai-reasoning-bg: #fafafa;
+  --ai-reasoning-hover: #f5f7fa;
+  --ai-error-bg: #fff2f0;
+  --ai-search-current-bg: #ecf5ff;
+
+  // Dialog / Popover
+  --dialog-bg: #ffffff;
+  --popover-bg: #ffffff;
+
+  // Loading mask
+  --loading-mask-bg: rgba(255, 255, 255, 0.9);
+  --loading-mask-sidebar: #fafafa;
+  --loading-mask-book: #404040;
+
+  // Scrollbar
+  --scrollbar-thumb: #c0c4cc;
+  --scrollbar-track: transparent;
+
+  // Shadow
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+// Dark theme
+[data-theme="dark"] {
+  // Background colors - darker overall
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #1e1e1e;
+  --bg-tertiary: #252525;
+  --bg-hover: #2a2a2a;
+  --bg-active: #333333;
+  --bg-sidebar-dark: #1a1a1a;
+  --bg-sidebar-dark-hover: #2a2a2a;
+
+  // Text colors
+  --text-primary: #d4d4d4;
+  --text-secondary: #a0a0a0;
+  --text-tertiary: #707070;
+  --text-placeholder: #505050;
+  --text-light: #d4d4d4;
+
+  // Border colors
+  --border-primary: #333333;
+  --border-secondary: #2a2a2a;
+  --border-tertiary: #2d2d2d;
+  --border-light: #3a3a3a;
+  --border-dark: #404040;
+
+  // Component specific
+  --header-bg: #1a1a1a;
+  --header-border: #2a2a2a;
+  --content-bg: #1e1e1e;
+  --doc-sidebar-bg: #1c1c1c;
+  --doc-sidebar-border: #1c1c1c;
+  --doc-sidebar-selected: #2a2a2a;
+  --doc-sidebar-text: #a0a0a0;
+  --book-sidebar-bg: #1a1a1a;
+  --book-sidebar-border: #1a1a1a;
+  --book-sidebar-selected: #2a2a2a;
+  --book-sidebar-text: #d4d4d4;
+
+  // Editor / Code
+  --code-bg: #1a1a1a;
+  --editor-toolbar-bg: #1e1e1e;
+  --editor-toolbar-border: #333333;
+  --editor-toolbar-icon: #a0a0a0;
+  --editor-toolbar-hover: #2a2a2a;
+
+  // AI Sidebar
+  --ai-sidebar-bg: #1e1e1e;
+  --ai-user-task-bg: #252525;
+  --ai-reasoning-bg: #1e1e1e;
+  --ai-reasoning-hover: #252525;
+  --ai-error-bg: #3d2020;
+  --ai-search-current-bg: #1a3050;
+
+  // Dialog / Popover
+  --dialog-bg: #1e1e1e;
+  --popover-bg: #252525;
+
+  // Loading mask
+  --loading-mask-bg: rgba(26, 26, 26, 0.9);
+  --loading-mask-sidebar: #1e1e1e;
+  --loading-mask-book: #1a1a1a;
+
+  // Scrollbar
+  --scrollbar-thumb: #404040;
+  --scrollbar-track: #1e1e1e;
+
+  // Shadow
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.5);
+
+  // md-editor-v3 cyanosis theme overrides
+  .md-editor-preview,
+  .cyanosis-theme {
+    --md-theme-color: #d4d4d4;
+    --md-theme-base-color: #d4d4d4;
+    --md-theme-title-color: #d4d4d4;
+    --md-theme-strong-color: #e6c07b;
+    --md-theme-link-color: #e6c07b;
+    --md-theme-linkh-color: #f0d090;
+    --md-theme-blockquote-color: #a0a0a0;
+    --md-theme-blockquote-bg-color: #252525;
+    --md-theme-code-color: #e6c07b;
+    --md-theme-code-bg-color: #3d3520;
+    --md-theme-border-color: #333333;
+    --md-theme-border-color-2: #333333;
+    --md-theme-table-border-color: #333333;
+  }
+}
+
+// Global scrollbar styling
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+// Element Plus dark theme overrides
+[data-theme="dark"] {
+  // Form elements
+  --el-bg-color: var(--bg-primary);
+  --el-bg-color-overlay: var(--bg-tertiary);
+  --el-bg-color-page: var(--bg-secondary);
+  --el-text-color-primary: var(--text-primary);
+  --el-text-color-regular: var(--text-secondary);
+  --el-text-color-secondary: var(--text-tertiary);
+  --el-text-color-placeholder: var(--text-placeholder);
+  --el-border-color: var(--border-primary);
+  --el-border-color-light: var(--border-secondary);
+  --el-border-color-lighter: var(--border-tertiary);
+  --el-fill-color: var(--bg-tertiary);
+  --el-fill-color-light: var(--bg-hover);
+  --el-fill-color-lighter: var(--bg-active);
+  --el-fill-color-blank: var(--bg-primary);
+
+  // Dialog
+  --el-dialog-bg-color: var(--dialog-bg);
+
+  // Popover
+  --el-popover-bg-color: var(--popover-bg);
+
+  // Dropdown
+  --el-dropdown-menuItem-hover-fill: var(--bg-hover);
+  --el-dropdown-menuItem-hover-color: var(--text-primary);
+
+  // Input
+  --el-input-bg-color: var(--bg-tertiary);
+  --el-input-border-color: var(--border-primary);
+  --el-input-text-color: var(--text-primary);
+  --el-input-placeholder-color: var(--text-placeholder);
+
+  // Select
+  --el-select-input-focus-border-color: #0094c1;
+
+  // Button
+  --el-button-bg-color: var(--bg-tertiary);
+  --el-button-border-color: var(--border-primary);
+  --el-button-text-color: var(--text-primary);
+  --el-button-hover-bg-color: var(--bg-hover);
+  --el-button-hover-border-color: var(--border-light);
+
+  // Message Box
+  --el-messagebox-title-color: var(--text-primary);
+  --el-messagebox-content-color: var(--text-secondary);
+
+  // Loading
+  --el-mask-color: var(--loading-mask-bg);
+
+  // Empty
+  --el-empty-description-margin-top: 20px;
+}

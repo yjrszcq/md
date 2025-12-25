@@ -557,12 +557,12 @@ const handleClose = () => {
   align-items: center;
   margin-bottom: 16px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #ebeef5;
+  border-bottom: 1px solid var(--border-secondary);
 
   .enable-label {
     margin-left: 8px;
     font-size: 14px;
-    color: #303133;
+    color: var(--text-primary);
   }
 }
 
@@ -572,7 +572,7 @@ const handleClose = () => {
   align-items: center;
   margin-bottom: 16px;
   .tip {
-    color: #909399;
+    color: var(--text-tertiary);
     font-size: 13px;
   }
 }
@@ -592,19 +592,19 @@ const handleClose = () => {
   justify-content: space-between;
   align-items: center;
   padding: 12px;
-  border: 1px solid #ebeef5;
+  border: 1px solid var(--border-secondary);
   border-radius: 4px;
   margin-bottom: 8px;
   transition: all 0.2s;
   cursor: pointer;
 
   &:hover {
-    border-color: #c0c4cc;
+    border-color: var(--border-light);
   }
 
   &.active {
     border-color: #409eff;
-    background-color: #ecf5ff;
+    background-color: var(--ai-search-current-bg);
   }
 
   .prompt-radio {
@@ -624,7 +624,7 @@ const handleClose = () => {
 }
 
 .form-tip {
-  color: #909399;
+  color: var(--text-tertiary);
   font-size: 12px;
   margin-left: 12px;
 }

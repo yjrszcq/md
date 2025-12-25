@@ -37,6 +37,7 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  background-color: var(--bg-secondary);
   .md-view {
     height: 100%;
     width: 100%;
@@ -44,7 +45,7 @@ onMounted(() => {
   }
   .error-view {
     font-size: 16px;
-    color: #595959;
+    color: var(--text-secondary);
     user-select: none;
   }
 }
