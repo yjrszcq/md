@@ -72,7 +72,7 @@
             </div>
             <div class="prompt-actions" @click.stop>
               <el-button text size="small" @click="editPrompt(index)">编辑</el-button>
-              <el-button text size="small" type="danger" @click="deletePrompt(index)">删除</el-button>
+              <el-button text size="small" class="delete-btn" @click="deletePrompt(index)">删除</el-button>
             </div>
           </div>
           <el-empty v-if="form.systemPrompts.length === 0" description="暂无系统提示词" />
@@ -603,7 +603,7 @@ const handleClose = () => {
   }
 
   &.active {
-    border-color: #409eff;
+    border-color: var(--el-color-primary, #409eff);
     background-color: var(--ai-search-current-bg);
   }
 
@@ -620,6 +620,27 @@ const handleClose = () => {
     display: flex;
     gap: 4px;
     flex-shrink: 0;
+
+    :deep(.el-button) {
+      color: var(--text-secondary);
+      background-color: transparent !important;
+
+      &:hover,
+      &:focus,
+      &:focus-visible {
+        color: var(--el-color-primary, #409eff);
+        background-color: transparent !important;
+      }
+    }
+
+    .delete-btn {
+      color: #f56c6c !important;
+      &:hover,
+      &:focus {
+        color: #f89090 !important;
+        background-color: transparent !important;
+      }
+    }
   }
 }
 

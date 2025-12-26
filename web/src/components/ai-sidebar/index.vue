@@ -965,7 +965,10 @@ const stopInputResize = () => {
       }
 
       &:hover {
-        color: #ffd966;
+        color: var(--el-color-primary, #409eff);
+      }
+      &:focus-visible {
+        color: var(--el-color-primary, #409eff);
       }
     }
   }
