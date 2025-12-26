@@ -6,7 +6,7 @@ on:
 env:
   IMAGE_OWNER: szcq
   IMAGE_NAME: md
-  IMAGE_VERSION: 1.1.1
+  IMAGE_VERSION: 1.1.2
 
 jobs:
   build:
