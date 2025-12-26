@@ -71,9 +71,27 @@
   --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-// Dark theme
+// Global scrollbar styling
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+// Dark theme - all dark mode styles consolidated
 [data-theme="dark"] {
-  // Background colors - darker overall
+  // Mobile tap highlight color (change from blue to yellow)
+  -webkit-tap-highlight-color: rgba(230, 192, 123, 0.3);
+
+  // Background colors
   --bg-primary: #1a1a1a;
   --bg-secondary: #1e1e1e;
   --bg-tertiary: #252525;
@@ -122,7 +140,7 @@
   --ai-reasoning-bg: #1e1e1e;
   --ai-reasoning-hover: #252525;
   --ai-error-bg: #3d2020;
-  --ai-search-current-bg: #1a3050;
+  --ai-search-current-bg: #2a2a2a;
 
   // Dialog / Popover
   --dialog-bg: #1e1e1e;
@@ -158,25 +176,15 @@
     --md-theme-border-color-2: #333333;
     --md-theme-table-border-color: #333333;
   }
-}
+  // Primary color for focus states
+  --el-color-primary: #e6c07b;
+  --el-color-primary-light-3: #d4a656;
+  --el-color-primary-light-5: #c9985a;
+  --el-color-primary-light-7: #b38a50;
+  --el-color-primary-light-8: #a07d48;
+  --el-color-primary-light-9: #3d3520;
+  --el-color-primary-dark-2: #f0d090;
 
-// Global scrollbar styling
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--scrollbar-track);
-}
-
-// Element Plus dark theme overrides
-[data-theme="dark"] {
   // Form elements
   --el-bg-color: var(--bg-primary);
   --el-bg-color-overlay: var(--bg-tertiary);
@@ -200,7 +208,7 @@
   --el-popover-bg-color: var(--popover-bg);
 
   // Dropdown
-  --el-dropdown-menuItem-hover-fill: var(--bg-hover);
+  --el-dropdown-menuItem-hover-fill: #2a2a2a;
   --el-dropdown-menuItem-hover-color: var(--text-primary);
 
   // Input
@@ -208,9 +216,10 @@
   --el-input-border-color: var(--border-primary);
   --el-input-text-color: var(--text-primary);
   --el-input-placeholder-color: var(--text-placeholder);
+  --el-input-focus-border-color: #e6c07b;
 
   // Select
-  --el-select-input-focus-border-color: #0094c1;
+  --el-select-input-focus-border-color: #e6c07b;
 
   // Button
   --el-button-bg-color: var(--bg-tertiary);
@@ -228,4 +237,314 @@
 
   // Empty
   --el-empty-description-margin-top: 20px;
+}
+
+// Dark theme global styles for popup layers (mounted on body)
+html[data-theme="dark"] {
+  // Element Plus color variables for dark mode popups
+  --el-bg-color-overlay: #252525;
+  --el-fill-color-light: #2a2a2a;
+
+  // Radio button group - darker style
+  .el-radio-button {
+    .el-radio-button__inner {
+      background-color: #2a2a2a !important;
+      border-color: #404040 !important;
+      color: #a0a0a0 !important;
+    }
+
+    &.is-active .el-radio-button__inner {
+      background-color: #8a6a2a !important;
+      border-color: #8a6a2a !important;
+      color: #fff !important;
+      // Hide the bright left border from adjacent button
+      box-shadow: -1px 0 0 0 #8a6a2a !important;
+    }
+
+    &:not(.is-active):hover .el-radio-button__inner {
+      color: #d4d4d4 !important;
+    }
+  }
+
+  // Input/Select focus border
+  .el-input.is-focus .el-input__wrapper,
+  .el-input__wrapper:focus,
+  .el-input__wrapper.is-focus,
+  .el-select .el-input.is-focus .el-input__wrapper {
+    box-shadow: 0 0 0 1px #e6c07b inset !important;
+  }
+
+  // Dropdown menu
+  .el-dropdown-menu {
+    background-color: #252525 !important;
+    border-color: #333333 !important;
+  }
+
+  .el-dropdown-menu__item {
+    color: #d4d4d4 !important;
+
+    &:hover,
+    &:focus {
+      background-color: #2a2a2a !important;
+      color: #ffd966 !important;
+    }
+  }
+
+  // Select dropdown
+  .el-select-dropdown {
+    background-color: #252525 !important;
+    border-color: #333333 !important;
+  }
+
+  .el-select-dropdown__item {
+    color: #d4d4d4 !important;
+
+    &.hover,
+    &:hover {
+      background-color: #2a2a2a !important;
+      color: #ffd966 !important;
+    }
+
+    &.selected,
+    &.is-selected {
+      color: #ffd966 !important;
+      background-color: #2a2a2a !important;
+      font-weight: bold !important;
+    }
+  }
+
+  // Force override for select dropdown items
+  .el-select-dropdown__list .el-select-dropdown__item.hover,
+  .el-select-dropdown__list .el-select-dropdown__item:hover {
+    background-color: #2a2a2a !important;
+    color: #ffd966 !important;
+  }
+
+  .el-select-dropdown__list .el-select-dropdown__item.selected,
+  .el-select-dropdown__list .el-select-dropdown__item.is-selected {
+    color: #ffd966 !important;
+    background-color: #2a2a2a !important;
+  }
+
+  // Popper (used by el-select, el-popover, etc.)
+  .el-popper {
+    background-color: #252525 !important;
+    border-color: #333333 !important;
+  }
+
+  .el-popper__arrow::before {
+    background-color: #252525 !important;
+    border-color: #333333 !important;
+  }
+
+  // Unified button hover/active styles - all buttons should be darker before hover, lighter after hover
+  .el-button {
+    // Default button
+    &--default:not(.is-link) {
+      &:hover,
+      &:focus {
+        background-color: #3a3a3a !important;
+        border-color: #505050 !important;
+      }
+      &:active {
+        background-color: #4a4a4a !important;
+        border-color: #606060 !important;
+      }
+    }
+
+    // Primary and Warning buttons (both yellow)
+    &--primary:not(.is-link),
+    &--warning:not(.is-link) {
+      background-color: #8a6a2a !important;
+      border-color: #8a6a2a !important;
+      color: #fff !important;
+      &:hover,
+      &:focus {
+        background-color: #9a7a3a !important;
+        border-color: #9a7a3a !important;
+      }
+      &:active {
+        background-color: #aa8a4a !important;
+        border-color: #aa8a4a !important;
+      }
+      &.is-disabled,
+      &.is-disabled:hover {
+        background-color: #5a4a1a !important;
+        border-color: #5a4a1a !important;
+      }
+    }
+
+    // Success button (green)
+    &--success:not(.is-link) {
+      background-color: #2a6a4a !important;
+      border-color: #2a6a4a !important;
+      &:hover,
+      &:focus {
+        background-color: #3a7a5a !important;
+        border-color: #3a7a5a !important;
+      }
+      &:active {
+        background-color: #4a8a6a !important;
+        border-color: #4a8a6a !important;
+      }
+      &.is-disabled,
+      &.is-disabled:hover {
+        background-color: #1a4a3a !important;
+        border-color: #1a4a3a !important;
+      }
+    }
+
+    // Danger button (red) - exclude link type
+    &--danger:not(.is-link) {
+      background-color: #8a2a2a !important;
+      border-color: #8a2a2a !important;
+      &:hover,
+      &:focus {
+        background-color: #9a3a3a !important;
+        border-color: #9a3a3a !important;
+      }
+      &:active {
+        background-color: #aa4a4a !important;
+        border-color: #aa4a4a !important;
+      }
+      &.is-disabled,
+      &.is-disabled:hover {
+        background-color: #5a1a1a !important;
+        border-color: #5a1a1a !important;
+      }
+    }
+
+    // Info button (gray) - exclude link type
+    &--info:not(.is-link) {
+      background-color: #4a4a4a !important;
+      border-color: #4a4a4a !important;
+      &:hover,
+      &:focus {
+        background-color: #5a5a5a !important;
+        border-color: #5a5a5a !important;
+      }
+      &:active {
+        background-color: #6a6a6a !important;
+        border-color: #6a6a6a !important;
+      }
+      &.is-disabled,
+      &.is-disabled:hover {
+        background-color: #3a3a3a !important;
+        border-color: #3a3a3a !important;
+      }
+    }
+
+    // Text button (no background)
+    &.is-text,
+    &--text {
+      &:hover,
+      &:focus {
+        background-color: #3a3a3a !important;
+      }
+      &:active {
+        background-color: #4a4a4a !important;
+      }
+    }
+
+    // Link button - no background, only color change on hover (brighter)
+    &.is-link {
+      background-color: transparent !important;
+      border-color: transparent !important;
+      &:hover,
+      &:focus {
+        background-color: transparent !important;
+        border-color: transparent !important;
+      }
+      &:active {
+        background-color: transparent !important;
+        border-color: transparent !important;
+      }
+    }
+
+    // Primary and Warning link buttons (both yellow)
+    &--primary.is-link,
+    &--warning.is-link {
+      color: #e6a23c !important;
+      &:hover,
+      &:focus {
+        color: #f0c060 !important;
+      }
+      &:active {
+        color: #ffd980 !important;
+      }
+    }
+
+    // Success link button
+    &--success.is-link {
+      color: #67c23a !important;
+      &:hover,
+      &:focus {
+        color: #85d35a !important;
+      }
+      &:active {
+        color: #a3e47a !important;
+      }
+    }
+
+    // Danger link button - brighter red on hover
+    &--danger.is-link {
+      color: #f56c6c !important;
+      &:hover,
+      &:focus {
+        color: #f89090 !important;
+      }
+      &:active {
+        color: #fab4b4 !important;
+      }
+    }
+
+    // Info link button - brighter gray on hover
+    &--info.is-link {
+      color: #909399 !important;
+      &:hover,
+      &:focus {
+        color: #b0b3b8 !important;
+      }
+      &:active {
+        color: #d0d3d8 !important;
+      }
+    }
+  }
+
+  // Exception: Tool pages with multiple button colors keep primary as blue
+  .page-rsa,
+  .page-regular,
+  .page-generate,
+  .page-encryption {
+    .el-button--primary:not(.is-link) {
+      background-color: #2a5a8a !important;
+      border-color: #2a5a8a !important;
+      color: #fff !important;
+      &:hover,
+      &:focus {
+        background-color: #3a6a9a !important;
+        border-color: #3a6a9a !important;
+      }
+      &:active {
+        background-color: #4a7aaa !important;
+        border-color: #4a7aaa !important;
+      }
+      &.is-disabled,
+      &.is-disabled:hover {
+        background-color: #1a3a5a !important;
+        border-color: #1a3a5a !important;
+      }
+    }
+
+    .el-button--primary.is-link {
+      color: #5a9acf !important;
+      &:hover,
+      &:focus {
+        color: #7ab4e6 !important;
+      }
+      &:active {
+        color: #9acef0 !important;
+      }
+    }
+  }
 }

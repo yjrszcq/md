@@ -501,4 +501,30 @@ defineExpose({ saveDoc });
     margin-left: -55%;
   }
 }
+
+// Dark theme: doc sidebar create-button (primary link) should be brighter
+[data-theme="dark"] {
+  .page-doc {
+    .create-button.el-button--primary.is-link {
+      color: #f0c060 !important;
+      &:hover,
+      &:focus {
+        color: #ffd966 !important;
+      }
+      &:active {
+        color: #ffe680 !important;
+      }
+    }
+
+    // Selected doc left border - yellow instead of blue
+    .scroll-view .item-view.selected {
+      border-left-color: #f0c060 !important;
+    }
+
+    // Published doc corner badge - yellow instead of blue
+    .scroll-view .item-view .published-view {
+      border-top-color: #f0c060 !important;
+    }
+  }
+}
 </style>

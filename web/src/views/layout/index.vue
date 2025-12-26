@@ -318,3 +318,23 @@ const onAiConfigChanged = (config: AIConfig) => {
   background-color: var(--content-bg);
 }
 </style>
+
+<style lang="scss">
+// Dark theme: menu active color should be yellow (unscoped to work with data-theme)
+[data-theme="dark"] {
+  .top-view {
+    .left-view .menu-view {
+      a:hover {
+        background: rgba(230, 162, 60, 0.1) !important;
+      }
+      .router-link-active {
+        color: #f0c060 !important;
+        border-color: #f0c060 !important;
+      }
+    }
+    .right-view .text-view:hover {
+      color: #f0c060 !important;
+    }
+  }
+}
+</style>

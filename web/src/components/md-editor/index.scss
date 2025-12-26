@@ -54,21 +54,30 @@
     background-color: rgba(200, 160, 80, 0.35);
   }
 
-  // Force override cyanosis theme - only in preview area
-  .md-editor-preview.cyanosis-theme,
-  .md-editor .md-editor-preview.cyanosis-theme,
-  .md-editor-dark .md-editor-preview.cyanosis-theme {
-    // Don't set color here - it breaks code highlighting
-
-    h1, h2, h3, h4, h5, h6 {
+  // Preview content styling - unified for all preview scenarios
+  .md-editor-preview {
+    // Content elements
+    & > p, & > ul > li, & > ol > li, & > dl > dd, & > dl > dt,
+    & > table td, & > table th,
+    & > blockquote p, & > blockquote {
       color: #d4d4d4 !important;
-      border-color: #333333 !important;
-
-      &::before, &::after {
-        color: #e6c07b !important;
-      }
     }
 
+    // Bold text (darker yellow)
+    p strong, p b,
+    li strong, li b,
+    td strong, td b,
+    blockquote strong, blockquote b {
+      color: #d4a656 !important;
+    }
+
+    // Italic text
+    p em, p i,
+    li em, li i {
+      color: #d4d4d4 !important;
+    }
+
+    // Links (yellow/gold, exclude code blocks)
     a:not(pre a):not(.md-editor-code-copy) {
       color: #e6c07b !important;
       border-bottom-color: #333333 !important;
@@ -80,70 +89,7 @@
       border-bottom-color: #e6c07b !important;
     }
 
-    // Only in preview, not in code blocks
-    & > strong, & > b,
-    p strong, p b,
-    li strong, li b,
-    td strong, td b,
-    blockquote strong, blockquote b {
-      color: #d4a656 !important;
-    }
-
-    & > em, & > i,
-    p em, p i,
-    li em, li i {
-      color: #d4d4d4 !important;
-    }
-  }
-
-  // Also target md-editor-dark class directly - preview only
-  .md-editor-dark .md-editor-preview {
-    // Don't set color here - it breaks code highlighting
-
-    h1, h2, h3, h4, h5, h6 {
-      color: #e6c07b !important;
-    }
-
-    // Only in preview content, not in code blocks
-    p strong, p b,
-    li strong, li b,
-    td strong, td b {
-      color: #d4a656 !important;
-    }
-
-    a:not(pre a):not(.md-editor-code-copy) {
-      color: #e6c07b !important;
-    }
-  }
-
-  // Also target generic preview class
-  .md-editor-preview {
-    // Set color only on specific content elements, not globally
-
-    // Only apply to non-code-block elements
-    & > p, & > ul > li, & > ol > li, & > dl > dd, & > dl > dt,
-    & > table td, & > table th,
-    & > blockquote p, & > blockquote {
-      color: #d4d4d4 !important;
-    }
-
-    // Bold text should be darker yellow - only in content, not code blocks
-    p strong, p b,
-    li strong, li b,
-    td strong, td b,
-    blockquote strong, blockquote b {
-      color: #d4a656 !important;
-    }
-
-    // Links should be yellow/gold (but not in code blocks)
-    a:not(pre a):not(.md-editor-code-copy) {
-      color: #e6c07b !important;
-    }
-    a:not(pre a):not(.md-editor-code-copy):hover {
-      color: #f0d090 !important;
-    }
-
-    // Restore cyanosis-style heading decorations for dark mode
+    // Headings with cyanosis-style decorations
     h1 {
       color: #e6c07b !important;
       padding-bottom: 4px;
@@ -309,11 +255,75 @@
     .cm-activeLine {
       background-color: var(--bg-hover);
     }
+    // Cursor color - yellow for dark mode
+    .cm-cursor,
+    .cm-cursor-primary,
+    .cm-cursorLayer .cm-cursor {
+      border-left-color: #e6c07b !important;
+    }
+    .cm-content {
+      caret-color: #e6c07b !important;
+    }
   }
 
   // Editor toolbar and footer - lighter background
   .md-editor-toolbar-wrapper,
   .md-editor-footer {
     background-color: var(--bg-tertiary) !important;
+  }
+
+  // Override md-editor CSS variables for dark theme
+  .md-editor-dark {
+    --md-bk-color-outstand: #3a3a3a;
+    --md-bk-color: var(--bg-secondary);
+  }
+
+  // Scrollbar styling for md-editor internal scrollbars
+  .md-editor,
+  .md-editor-dark {
+    .cm-scroller,
+    .md-editor-preview-wrapper {
+      &::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      &::-webkit-scrollbar-track {
+        background: #171717;
+      }
+      &::-webkit-scrollbar-thumb {
+        background: #333333;
+        border-radius: 4px;
+      }
+      &::-webkit-scrollbar-thumb:hover {
+        background: #404040;
+      }
+    }
+  }
+
+  // Toolbar dropdown menus (link, image, table, etc.)
+  .md-editor-dropdown,
+  .md-editor-modal {
+    background-color: #2a2a2a !important;
+    border-color: #404040 !important;
+
+    li, .md-editor-dropdown-item {
+      &:hover {
+        background-color: #3a3a3a !important;
+      }
+    }
+  }
+
+  // Table selector grid
+  .md-editor-table-shape {
+    background-color: #2a2a2a !important;
+    border-color: #404040 !important;
+
+    .md-editor-table-shape-col {
+      border-color: #505050 !important;
+
+      &.md-editor-table-shape-col-include {
+        background-color: #3a3a3a !important;
+      }
+    }
   }
 }

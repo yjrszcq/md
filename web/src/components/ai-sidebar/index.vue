@@ -815,9 +815,9 @@ const doResize = (e: MouseEvent | TouchEvent) => {
   const diff = startX - clientX;
 
   if (isLandscapeMobile.value) {
-    // Landscape mobile: use percentage (50% to 100%)
+    // Landscape mobile: use percentage (35% to 100%)
     const diffPercent = (diff / window.innerWidth) * 100;
-    const newPercent = Math.max(50, Math.min(100, startWidthPercent + diffPercent));
+    const newPercent = Math.max(35, Math.min(100, startWidthPercent + diffPercent));
     sidebarWidthPercent.value = newPercent;
   } else {
     // Desktop: use pixels (300px to 600px)
@@ -930,7 +930,7 @@ const stopInputResize = () => {
   z-index: 10;
 
   &:hover {
-    background: #409eff;
+    background: #e6c07b;
   }
 }
 
@@ -961,10 +961,11 @@ const stopInputResize = () => {
         white-space: nowrap;
         display: block;
         text-align: left;
+        line-height: 1.4;
       }
 
       &:hover {
-        color: #409eff;
+        color: #ffd966;
       }
     }
   }
@@ -1005,6 +1006,15 @@ const stopInputResize = () => {
   .conversation-select {
     flex: 1;
     min-width: 0;
+
+    // Dark theme: override focus border color
+    :deep(.el-input.is-focus .el-input__wrapper) {
+      box-shadow: 0 0 0 1px #e6c07b inset !important;
+    }
+
+    :deep(.el-input__wrapper.is-focus) {
+      box-shadow: 0 0 0 1px #e6c07b inset !important;
+    }
   }
 }
 
@@ -1020,14 +1030,23 @@ const stopInputResize = () => {
     align-items: center;
     padding: 10px 16px;
     cursor: pointer;
-    transition: background 0.15s;
+    transition: background 0.15s, color 0.15s;
 
     &:hover {
       background: var(--bg-hover);
+
+      .conv-title {
+        color: #ffd966;
+      }
     }
 
     &.is-current {
       background: var(--ai-search-current-bg);
+
+      .conv-title {
+        color: #ffd966;
+        font-weight: bold;
+      }
     }
 
     .conv-title {
@@ -1285,8 +1304,9 @@ const stopInputResize = () => {
       transition: background 0.2s;
     }
 
-    &:hover::before {
-      background: #409eff;
+    &:hover::before,
+    &:active::before {
+      background: #e6c07b;
     }
   }
 
@@ -1386,7 +1406,7 @@ const stopInputResize = () => {
 
     &:hover::before,
     &:active::before {
-      background: #409eff;
+      background: #e6c07b;
     }
   }
 }
@@ -1420,6 +1440,37 @@ const stopInputResize = () => {
     .conv-time {
       font-weight: 600;
     }
+  }
+}
+
+// Dark theme select dropdown styling
+[data-theme="dark"] {
+  // Dim the el-empty image in dark mode
+  .el-empty__image svg {
+    opacity: 0.5;
+  }
+
+  // Select input focus border
+  .el-select .el-input.is-focus .el-input__wrapper {
+    box-shadow: 0 0 0 1px #e6c07b inset !important;
+  }
+
+  .el-select .el-input__wrapper.is-focus {
+    box-shadow: 0 0 0 1px #e6c07b inset !important;
+  }
+
+  .el-select-dropdown__item.hover,
+  .el-select-dropdown__item:hover {
+    background-color: #2a2a2a !important;
+    color: #ffd966 !important;
+  }
+
+  .el-select-dropdown__item.selected,
+  .el-select-dropdown__item.is-selected,
+  .el-select-dropdown__item[aria-selected="true"] {
+    color: #ffd966 !important;
+    background-color: #2a2a2a !important;
+    font-weight: bold !important;
   }
 }
 </style>

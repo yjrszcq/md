@@ -139,4 +139,13 @@ const clear = () => {
     }
   }
 }
+
+// Dark theme
+[data-theme="dark"] {
+  .page-image-compression {
+    .image-view {
+      background: #2a2a2a;
+    }
+  }
+}
 </style>

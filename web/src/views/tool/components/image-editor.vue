@@ -91,14 +91,20 @@ const locale_zh = {
   Download: "下载图片",
 };
 
+// Check if dark theme is active
+const isDarkTheme = () => {
+  return document.documentElement.getAttribute("data-theme") === "dark";
+};
+
 const init = () => {
+  const backgroundColor = isDarkTheme() ? "#1a1a1a" : "#fcfcfc";
   new TuiImageEditor(imageEditorRef.value!, {
     includeUI: {
       // @ts-ignore
       locale: locale_zh,
       theme: {
         "common.bi.image": "",
-        "common.backgroundColor": "#fcfcfc",
+        "common.backgroundColor": backgroundColor,
       },
     },
     usageStatistics: false,
