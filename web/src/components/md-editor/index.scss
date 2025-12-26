@@ -27,6 +27,9 @@
     .preview-view {
       background-color: var(--bg-secondary);
     }
+    .catalog-view {
+      background-color: #252525;
+    }
   }
 }
 
@@ -150,12 +153,11 @@
     }
   }
 
-  // Make catalog background consistent
-  .md-editor-catalog {
-    background-color: var(--content-bg);
+  // Catalog link colors in dark mode
+  .md-editor-catalog-editor {
+    background-color: #252525 !important;
   }
 
-  // Catalog link colors in dark mode
   .md-editor-catalog-link {
     // Only style the direct span child, not nested catalog links
     > span {
