@@ -77,7 +77,8 @@ export default defineComponent({
           theme={theme.value}
           previewTheme={previewTheme.value}
           codeTheme={codeTheme.value}
-          codeFoldable={false}
+          codeFoldable
+          autoFoldThreshold={Number.MAX_SAFE_INTEGER}
           showCodeRowNumber
           mdHeadingId={generateId}
           noMermaid

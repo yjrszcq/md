@@ -167,7 +167,8 @@
               :theme="mdTheme"
               :previewTheme="previewTheme"
               :codeTheme="codeTheme"
-              :codeFoldable="false"
+              :codeFoldable="true"
+              :autoFoldThreshold="Number.MAX_SAFE_INTEGER"
             />
             <span v-else-if="task.status === 'processing'" class="cursor-blink">▋</span>
           </div>
