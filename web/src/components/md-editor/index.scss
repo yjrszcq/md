@@ -301,6 +301,24 @@
     }
   }
 
+  // Code block scrollbar
+  .md-editor-code-block {
+    &::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    &::-webkit-scrollbar-track {
+      background: #171717;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: #333333;
+      border-radius: 4px;
+    }
+    &::-webkit-scrollbar-thumb:hover {
+      background: #404040;
+    }
+  }
+
   // Remove dark-code bottom shadow line from md-editor default theme
   .md-editor-preview .md-editor-code pre code {
     box-shadow: none !important;
