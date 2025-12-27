@@ -59,8 +59,10 @@
       </el-table-column>
       <el-table-column label="文档地址" align="center" width="160">
         <template #default="scope">
-          <el-button type="primary" text @click="copyClick(scope.row.id)">复制</el-button>
-          <el-button type="primary" text @click="hrefClick(scope.row.id)">跳转</el-button>
+          <div class="doc-link-actions">
+            <el-button class="link-btn" text @click="copyClick(scope.row.id)">复制</el-button>
+            <el-button class="link-btn" text @click="hrefClick(scope.row.id)">跳转</el-button>
+          </div>
         </template>
       </el-table-column>
     </el-table>
@@ -222,6 +224,24 @@ const hrefClick = (id: string) => {
   }
   .column-active {
     color: #0094c1;
+  }
+
+  .doc-link-actions {
+    display: inline-flex;
+    gap: 8px;
+
+    :deep(.link-btn) {
+      color: var(--text-secondary);
+      background-color: transparent !important;
+      padding: 0 6px;
+
+      &:hover,
+      &:focus,
+      &:focus-visible {
+        color: var(--el-color-primary, #409eff);
+        background-color: transparent !important;
+      }
+    }
   }
 }
 </style>
