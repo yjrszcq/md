@@ -46,6 +46,7 @@ export default defineComponent({
             previewTheme={previewTheme.value}
             codeTheme={codeTheme.value}
             mdHeadingId={generateId}
+            codeFoldable={false}
             noMermaid
           />
           <el-scrollbar class="catalog-view">

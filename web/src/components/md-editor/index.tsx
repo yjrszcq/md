@@ -77,6 +77,7 @@ export default defineComponent({
           theme={theme.value}
           previewTheme={previewTheme.value}
           codeTheme={codeTheme.value}
+          codeFoldable={false}
           showCodeRowNumber
           mdHeadingId={generateId}
           noMermaid

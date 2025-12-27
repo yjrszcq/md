@@ -161,7 +161,14 @@
             </el-button>
           </div>
           <div class="output-content">
-            <MdPreview v-if="task.output" :modelValue="task.output" previewTheme="cyanosis" :codeFoldable="task.status !== 'processing'" :autoFoldThreshold="30" />
+            <MdPreview
+              v-if="task.output"
+              :modelValue="task.output"
+              :theme="mdTheme"
+              :previewTheme="previewTheme"
+              :codeTheme="codeTheme"
+              :codeFoldable="false"
+            />
             <span v-else-if="task.status === 'processing'" class="cursor-blink">▋</span>
           </div>
         </div>
@@ -246,6 +253,19 @@ const tasks = shallowRef<TaskBlock[]>([]);
 const taskBlocksRef = ref<HTMLElement | null>(null);
 const expandedReasonings = ref<Set<string>>(new Set());
 const abortController = ref<AbortController | null>(null);
+
+// Theme handling for markdown preview
+const isDark = ref(document.documentElement.getAttribute("data-theme") === "dark");
+const themeObserver = new MutationObserver((mutations) => {
+  mutations.forEach((mutation) => {
+    if (mutation.attributeName === "data-theme") {
+      isDark.value = document.documentElement.getAttribute("data-theme") === "dark";
+    }
+  });
+});
+const mdTheme = computed(() => (isDark.value ? "dark" : "light"));
+const codeTheme = computed(() => (isDark.value ? "atom" : "github"));
+const previewTheme = computed(() => (isDark.value ? "default" : "cyanosis"));
 
 // Computed style for sidebar width
 const sidebarStyle = computed(() => {
@@ -409,12 +429,14 @@ onMounted(() => {
   updateLandscapeMobileState();
   window.addEventListener("ai-config-changed", handleAiConfigChanged as EventListener);
   window.addEventListener("resize", updateLandscapeMobileState);
+  themeObserver.observe(document.documentElement, { attributes: true });
 });
 
 onUnmounted(() => {
   window.removeEventListener("ai-config-changed", handleAiConfigChanged as EventListener);
   window.removeEventListener("resize", updateLandscapeMobileState);
   abortController.value?.abort();
+  themeObserver.disconnect();
 });
 
 watch(
