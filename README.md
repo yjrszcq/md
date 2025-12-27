@@ -1,6 +1,6 @@
 # 云文档
 
-> 本仓库为 [md](https://github.com/yanyunling/md) 增加了 AI 对话辅助功能
+> 本仓库为 [md](https://github.com/yanyunling/md) 增加了 AI 对话辅助功能以及暗色主题
 
 ## 介绍
 
