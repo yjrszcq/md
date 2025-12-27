@@ -298,9 +298,14 @@
       }
       &::-webkit-scrollbar-thumb:hover {
         background: #404040;
-      }
     }
   }
+
+  // Remove dark-code bottom shadow line from md-editor default theme
+  .md-editor-preview .md-editor-code pre code {
+    box-shadow: none !important;
+  }
+}
 
   // Toolbar dropdown menus (link, image, table, etc.)
   .md-editor-dropdown,
@@ -328,4 +333,5 @@
       }
     }
   }
+
 }
