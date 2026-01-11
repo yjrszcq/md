@@ -13,6 +13,10 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+    extensions: {
+      type: Array as () => any[],
+      default: () => [],
+    },
   },
   emits: ["save"],
   setup(props, { emit }) {
@@ -34,22 +38,24 @@ export default defineComponent({
         { tag: t.number, color: "rgb(224, 108, 117)" }, // numbers
         { tag: t.bool, color: "rgb(78, 125, 228)" }, // booleans
         { tag: t.null, color: "rgb(198, 120, 221)" }, // null
-        { tag: t.propertyName, color: "#a9b7c6" }, // field names
-        { tag: t.punctuation, color: "#c2c2c2" },
+        { tag: t.propertyName, color: "#c2c2c2" }, // field names
+        { tag: t.punctuation, color: "#a9b7c6" },
       ]);
 
       const tokenTheme = EditorView.theme({
         ".cmt-string, .cm-string": { color: "rgb(229, 192, 123)" },
         ".cmt-number, .cm-number": { color: "rgb(224, 108, 117)" },
-        ".cmt-atom, .cm-atom": { color: "rgb(209, 154, 102)" }, // bool/null both map to atom in some modes
-        ".cmt-bool, .cm-bool": { color: "rgb(209, 154, 102)" },
+        ".cmt-atom, .cm-atom": { color: "rgb(78, 125, 228)" }, // bool/null both map to atom in some modes
+        ".cmt-bool, .cm-bool": { color: "rgb(78, 125, 228)" },
         ".cmt-null": { color: "rgb(198, 120, 221)" },
-        ".cmt-propertyName, .cm-property": { color: "#a9b7c6" },
+        ".cmt-propertyName, .cm-property": { color: "#c2c2c2" },
         ".cmt-punctuation, .cm-punctuation, .cmt-operator, .cm-operator": { color: "#a9b7c6" },
       });
 
+      const userExtensions = props.extensions && props.extensions.length > 0 ? props.extensions : [json()];
+
       const base = [
-        json(),
+        ...userExtensions,
         drawSelection(),
         keymap.of([
           {
