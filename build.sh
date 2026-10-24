@@ -1,5 +1,11 @@
 #!/bin/sh
 
+GO_BIN="${GO_BIN:-$HOME/sdk/go1.27.3/bin/go}"
+if [ ! -x "$GO_BIN" ]; then
+  echo "Go 1.27.3 SDK not found: $GO_BIN"
+  exit 1
+fi
+
 # 构建前端
 cd ./web
 npm install
@@ -12,7 +18,7 @@ cp -r ./web/dist ./md/web
 
 # 构建后端
 cd ./md
-go build
+"$GO_BIN" build
 echo "md build finished"
 
 # 本地运行

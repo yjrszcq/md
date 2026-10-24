@@ -1,5 +1,11 @@
 #!/bin/sh
 
+GO_BIN="${GO_BIN:-$HOME/sdk/go1.27.3/bin/go}"
+if [ ! -x "$GO_BIN" ]; then
+  echo "Go 1.27.3 SDK not found: $GO_BIN"
+  exit 1
+fi
+
 # Ensure web directory has a placeholder for go:embed (ignores dot files)
 mkdir -p ./md/web
 [ -z "$(ls -A ./md/web 2>/dev/null)" ] && echo "dev" > ./md/web/placeholder.txt
@@ -7,7 +13,7 @@ mkdir -p ./md/web
 # Build and start backend
 cd ./md
 echo "Building backend..."
-if ! go build; then
+if ! "$GO_BIN" build; then
   echo "Backend build failed!"
   exit 1
 fi
